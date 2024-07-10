@@ -146,22 +146,29 @@ export function removeChildren(element) {
     }
 }
 
+'use strict';
+
 export function html(options) {
-    options = options || {}
-    const object = document.createElement(options.type || 'div')
+    options = options || {};
+    const object = document.createElement(options.type || 'div');
     if (options.parent) {
-        options.parent.appendChild(object)
+        options.parent.appendChild(object);
     }
     if (options.className) {
-        object.classList.add(options.className)
+        object.classList.add(options.className);
     }
     if (options.html) {
-        object.innerHTML = options.html
+        object.innerHTML = options.html;
     }
     if (options.id) {
-        object.id = options.id
+        object.id = options.id;
     }
-    return object
+    if (options.attributes) {
+        for (const key in options.attributes) {
+            object.setAttribute(key, options.attributes[key]);
+        }
+    }
+    return object;
 }
 
 export function getChildIndex(parent, child) {

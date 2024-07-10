@@ -1,41 +1,72 @@
-# tree
-Vanilla drag-and-drop UI tree
+# Taskape Task Editor
+A vanilla drag-and-drop UI tree for managing tasks, based on David Figatner's drag-and-drop implementation.
 
 ## Rationale
-I needed a tree components for my tools. Most of the available visual tree APIs require vue or react. And so yy-tree was created.
+Taskape Task Editor is designed to provide an easy-to-use, drag-and-drop interface for managing hierarchical tasks without the need for frameworks like Vue or React.
 
 ## Super Simple Example
 ```js
-const data = {
-    children: [
-        { name: 'fruits', children: [
-            { name: 'apples', children: [] },
-            { name: 'oranges', children: [
-                { name: 'tangerines', children: [] },
-                { name: 'mandarins', children: [] },
-                { name: 'pomelo', children: [] },
-                { name: 'blood orange', children: [] },
-            ] }
-        ]},
-        { name: 'vegetables', children: [
-            { name: 'brocolli', children: [] },
-        ] },
+const tasks = {
+    task: [
+        { 
+            name: 'Do the laundry',
+            task: [
+                { name: 'Get the detergent', task: [] },
+                { name: 'Sort the clothes', task: [] },
+                { name: 'Put the clothes in the washing machine', task: [] },
+                { name: 'Turn on the washing machine', task: [] }
+            ] 
+        },
+        { 
+            name: 'Do the dishes',
+            task: [
+                { name: 'Scrape the dishes', task: [] },
+                { name: 'Rinse the dishes', task: [] },
+                { name: 'Put the dishes in the dishwasher', task: [] },
+                { name: 'Turn on the dishwasher', task: [] }
+            ]
+        }
     ]
-}
+};
 
-const tree = new Tree(data, { parent: document.body })
+const tree = new Tree(tasks, { parent: document.body, edit: true });
+tree.expandAll();
 ```
 
-## Live Examples
-https://davidfig.github.io/tree/
+## Features
+- Drag-and-drop tasks
+- Indentation for nested tasks
+- Expand/collapse tasks
+- Edit task names
+- Add new tasks
+- Delete tasks
 
-## API Documentation
-https://davidfig.github.io/tree/jsdoc/
+## Usage
+1. Include `taskape.js` in your project
+2. Create a new `Tree` instance with your tasks and options
+3. Call `expandAll()` to expand all tasks
+4. Call `collapseAll()` to collapse all tasks
+5. Call `getTasks()` to get the updated tasks
 
-## Installation
+## Options
+- `parent`: parent element to append the tree to
+- `edit`: editable task names
+- `delete`: delete tasks
+- `add`: add tasks
+- `expand`: expand tasks
+- `collapse`: collapse tasks
 
-    npm i yy-tree
+## Tasks
+Tasks are represented as a JavaScript object, where each task is an object with a `name` string and a `task` array of subtasks.
 
-## license
-MIT License
-(c) 2021 [YOPEY YOPEY LLC](https://yopeyopey.com/) by [David Figatner](https://twitter.com/yopey_yopey/)
+## Methods
+- `expandAll()`: expand all tasks
+- `collapseAll()`: collapse all tasks
+- `getTasks()`: get the updated tasks
+
+## License
+Taskape Task Editor is released under the [MIT License](https://opensource.org/licenses/MIT).
+```
+
+## Credits
+- [David Figatner] 

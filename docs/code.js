@@ -1,30 +1,33 @@
-import forkMe from 'fork-me-github'
+import { Tree } from '../src/tree';
 
-import { Tree } from '../src/tree'
-
-const data = {
-    children: [
-        { name: 'fruits', children: [
-            { name: 'apples', children: [] },
-            { name: 'oranges', children: [
-                { name: 'tangerines', children: [] },
-                { name: 'mandarins', children: [] },
-                { name: 'pomelo', children: [] },
-                { name: 'blood orange', children: [] },
-            ] }
-        ]},
-        { name: 'vegetables', children: [
-            { name: 'brocolli', children: [] },
-        ] },
+const tasks = {
+    task: [
+        { 
+            name: 'Do the laundry',
+            task: [
+                { name: 'Get the detergent', task: [] },
+                { name: 'Sort the clothes', task: [] },
+                { name: 'Put the clothes in the washing machine', task: [] },
+                { name: 'Turn on the washing machine', task: [] }
+            ] 
+        },
+        { 
+            name: 'Do the dishes',
+            task: [
+                { name: 'Scrape the dishes', task: [] },
+                { name: 'Rinse the dishes', task: [] },
+                { name: 'Put the dishes in the dishwasher', task: [] },
+                { name: 'Turn on the dishwasher', task: [] }
+            ]
+        }
     ]
-}
+};
 
 function test() {
-    const tree = new Tree(data, { parent: document.body })
-    tree.expandAll()
+    const tree = new Tree(tasks, { parent: document.body });
+    tree.expandAll();
 }
 
 window.onload = function () {
-    test()
-    forkMe('https://github.com/davidfig/tree')
-}
+    test();
+};
