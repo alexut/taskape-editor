@@ -1,7 +1,7 @@
 'use strict';
 
 import Events from 'eventemitter3';
-import clicked from './clicked'; // Adjusted path to clicked in src directory
+import clicked from './clicked';
 import { Input } from './input';
 import { defaults } from './defaults';
 import * as utils from './utils';
@@ -118,6 +118,8 @@ export class Tree extends Events {
                 }
             }
         });
+
+        leaf.name.addEventListener('input', (e) => this._handleTagActionSuggestions(e, leaf));
 
         leaf.name.addEventListener('blur', () => {
             if (this._options.edit) {
@@ -282,11 +284,109 @@ export class Tree extends Events {
         }
     }
 
-    _getParent(element) {   
+    _getParent(element) {
         element = element.parentNode;
         while (element.style.display === 'none') {
             element = element.parentNode;
         }
         return element;
+    }
+
+    _handleTagActionSuggestions(e, leaf) {
+        const input = e.target;
+        const value = input.innerText;
+        const cursorPosition = window.getSelection().getRangeAt(0).startOffset;
+
+        const lastSymbolIndex = this._findLastSymbol(value, cursorPosition);
+        if (lastSymbolIndex === -1) return;
+
+        const currentWord = value.substring(lastSymbolIndex, cursorPosition);
+        const suggestions = this._getSuggestions(currentWord);
+
+        this._showSuggestions(suggestions, input, cursorPosition);
+    }
+
+    _findLastSymbol(value, cursorPosition) {
+        const symbols = Object.values(this._options.symbols);
+        for (let i = cursorPosition - 1; i >= 0; i--) {
+            if (symbols.includes(value.charAt(i))) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    _getSuggestions(currentWord) {
+        const symbol = currentWord.charAt(0);
+        const wordPart = currentWord.substring(1).toLowerCase();
+
+        if (symbol === this._options.symbols.tags) {
+            return Object.keys(window.suggestions.tags).filter(tag => tag.startsWith(wordPart)).flatMap(tag => window.suggestions.tags[tag]);
+        } else if (symbol === this._options.symbols.actions) {
+            return Object.keys(window.suggestions.actions).filter(action => action.startsWith(wordPart)).flatMap(action => window.suggestions.actions[action]);
+        } else if (symbol === this._options.symbols.oracles) {
+            return Object.keys(window.suggestions.oracles).filter(oracle => oracle.startsWith(wordPart)).flatMap(oracle => window.suggestions.oracles[oracle]);
+        }
+
+        return [];
+    }
+
+    _showSuggestions(suggestions, target, cursorPosition) {
+        let suggestionsList = document.getElementById('suggestions-list');
+        if (!suggestionsList) {
+            suggestionsList = document.createElement('ul');
+            suggestionsList.id = 'suggestions-list';
+            suggestionsList.style.position = 'absolute';
+            document.body.appendChild(suggestionsList);
+        }
+
+        suggestionsList.innerHTML = '';
+        suggestionsList.style.left = `${target.getBoundingClientRect().left}px`;
+        suggestionsList.style.top = `${target.getBoundingClientRect().bottom}px`;
+
+        suggestions.forEach(suggestion => {
+            const suggestionItem = document.createElement('li');
+            suggestionItem.innerText = suggestion;
+            suggestionItem.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                this._insertSuggestion(target, suggestion, cursorPosition);
+                suggestionsList.innerHTML = '';
+            });
+            suggestionsList.appendChild(suggestionItem);
+        });
+    }
+
+    _insertSuggestion(target, suggestion, cursorPosition) {
+        const value = target.innerText;
+        const symbol = value.charAt(cursorPosition - 1);
+        const before = value.substring(0, cursorPosition - 1);
+        const after = value.substring(cursorPosition);
+
+        const span = document.createElement('span');
+        span.className = 'suggestion-span';
+        span.contentEditable = 'false';
+        span.innerHTML = `${symbol}${suggestion} <span class="remove-suggestion">x</span>`;
+        span.querySelector('.remove-suggestion').addEventListener('click', () => {
+            span.remove();
+        });
+
+        const range = window.getSelection().getRangeAt(0);
+        range.deleteContents();
+        range.insertNode(span);
+``
+        const space = document.createTextNode(' ');
+        range.insertNode(space);
+        range.setStartAfter(space);
+        range.setEndAfter(space);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+
+        const event = new Event('input', {
+            bubbles: true,
+            cancelable: true,
+        });
+        target.dispatchEvent(event);
+
+        target.focus();
     }
 }

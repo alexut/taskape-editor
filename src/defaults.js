@@ -6,8 +6,13 @@ export const defaults = {
     holdTime: 1000,
     expandOnClick: false,
     dragOpacity: 0.75,
-    prefixClassName: 'yy-tree',
+    prefixClassName: 'mb-task',
     cursorName: 'grab -webkit-grab pointer',
     cursorExpand: 'pointer',
-    edit: true // Added edit option
+    edit: true, 
+    symbols: {
+        oracles: '#',
+        tags: '@',
+        actions: '>'
+    }
 };

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Editor</title>
+    <link rel="stylesheet" href="index.css">
+    <script src="index.js" type="module"></script>
+    <script>
+        window.suggestions = {
+            tags: {
+                assigned: ['Alex', 'Valentin', 'Sergiy', '?assigned'],
+                estimate: ['5h', '30min', '2h', '1h', '6h', '?estimate'],
+                due: ['tomorrow', 'EOD', 'one week', 'one month', '?due']
+            },
+            actions: {
+                cmd: ['?cmd'],
+                cursor: ['?mouseX', '?mouseY']
+            },
+            oracles: {
+                example: ['oracle1', 'oracle2', '?oracle']
+            }
+        };
+    </script>
+</head>
+<body>
+    <div class="title">Taskape Task Editor</div>
+    <div id="tree"></div>
+</body>
+</html>

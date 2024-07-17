@@ -1,0 +1,75 @@
+.font {
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-size: 1.25em;
+}
+
+.mb-task-leaf {
+    /* Styles for leaf elements */
+    font-size: 1.25rem;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
+.mb-task-content {
+    /* Styles for content elements */
+    display: flex;
+    align-items: center;
+}
+
+.mb-task-expand {
+    /* Styles for expand icons */
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+}
+.mb-task-expand::before {
+    content: '+';
+}
+
+.mb-task-expand.hidden::before {
+    content: '';
+}
+
+.mb-task-expand.expanded::before {
+    content: '-';
+}
+.mb-task-name {
+    /* Styles for name elements */
+    padding: 0.5em 1em;
+    margin: 0.1em;
+    background: rgb(230, 230, 230);
+    user-select: none;
+    cursor: pointer;
+    width:200px;
+}
+
+.mb-task-indicator {
+    /* Styles for indicator elements */
+    background: rgb(150, 150, 255);
+    height: 5px;
+    width: 100px;
+    padding: 0 1em;
+}
+
+.mb-task-select {
+    /* Styles for selected elements */
+    background: rgb(200, 200, 200);
+}
+.mb-task-leaf-handler {
+    cursor: grab;
+    /* Add any additional styling needed */
+    border:1px solid red;
+}
+
+.suggestion-span {
+    background-color: #e0e0e0;
+    border-radius: 3px;
+    padding: 2px 5px;
+    margin: 0 2px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.suggestion-span .remove-suggestion {
+    margin-left: 5px;
+    cursor: pointer;
+}

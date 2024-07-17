@@ -1,11 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <link rel="stylesheet" href="index.css">
-    <script src="index.js"></script>
+    
+    <meta charset="utf-8">
+    <title>Home - Documentation</title>
+    
+    
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+    <script src="scripts/nav.js" defer></script>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-
 <body>
-    <div class="title">
-        Taskape Task Editor
-    </div>
-    <div id="tree"></div>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav >
+    
+    
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#distance">distance</a></li><li><a href="global.html#distancePointElement">distancePointElement</a></li><li><a href="global.html#el">el</a></li><li><a href="global.html#inside">inside</a></li><li><a href="global.html#options">options</a></li><li><a href="global.html#percentage">percentage</a></li><li><a href="global.html#style">style</a></li><li><a href="global.html#toGlobal">toGlobal</a></li></ul>
+    
+</nav>
+
+<div id="main">
+    
+
+    
+
+
+
+    
+
+
+    <section class="package">
+        <h3> </h3>		
+    </section>
+
+
+
+
+
+
+
+
+
+    
+
+
+
+    <section class="readme usertext">
+        <article><h1>Taskape Task Editor</h1>
+<p>A vanilla drag-and-drop UI tree for managing tasks, based on David Figatner's drag-and-drop ui tree</p>
+<h2>Rationale</h2>
+<p>Taskape Task Editor is designed to provide an easy-to-use, drag-and-drop interface for managing hierarchical tasks without the need for frameworks like Vue or React.</p>
+<h2>Interaction Diagram</h2>
+<pre class="prettyprint source lang-mermaid"><code>sequenceDiagram
+    participant User
+    participant Tree
+    participant Input
+    participant Clicked
+
+    User->>Tree: new Tree(tasks, { parent: document.body, edit: true })
+    Tree->>Input: constructor(tree)
+    Input->>Clicked: clicked(element, callback, options)
+    User->>Tree: expandAll()
+    Tree->>User: Expands all tasks
+    User->>Tree: addTask('New Task')
+    Tree->>User: Task added
+    User->>Tree: removeTask('Task ID')
+    Tree->>User: Task removed
+    User->>Tree: editTask('Task ID', 'New Name')
+    Tree->>User: Task edited
+</code></pre>
+<h2>UML Class Diagram</h2>
+<pre class="prettyprint source lang-mermaid"><code>classDiagram
+    class Tree {
+        +Task[] tasks
+        +Tree(Task[] tasks)
+        +void addTask(string name)
+        +void removeTask(string name)
+        +Task getTask(string name)
+        +void updateTaskName(string oldName, string newName)
+        +Task[] listTasks()
+    }
+
+    class Task {
+        +string name
+        +Task[] task
+        +Task(string name, Task[] task)
+        +void updateName(string newName)
+    }
+
+    class Clicked {
+        +Clicked(element, callback, options)
+        +void destroy()
+        +void touchstart(e)
+        +void touchmove(e)
+        +void touchcancel()
+        +void touchend(e)
+        +void mouseclick(e)
+        +void mousedblclick(e)
+    }
+
+    class Input {
+        +Input(Tree tree)
+        +void _down(e)
+        +void _hold()
+        +void _checkThreshold(e)
+        +void _pickup()
+        +void _move(e)
+        +void _up(e)
+        +void _moveData()
+        +void _indicatorMarginLeft(value)
+    }
+
+    class Indicator {
+        +Indicator(Tree tree)
+        +HTMLElement get()
+        +void set_marginLeft(value)
+    }
+
+    class Utils {
+        +static HTMLElement el(element)
+        +static number distance(x1, y1, x2, y2)
+        +static number distancePointElement(px, py, element)
+        +static boolean inside(x, y, element)
+        +static PointLike toGlobal(e)
+        +static object options(options, defaults)
+        +static void style(element, style, value)
+        +static number percentage(xa1, ya1, xa2, ya2, xb1, yb1, xb2, yb2)
+        +static void removeChildren(element)
+        +static HTMLElement html(options)
+        +static number getChildIndex(parent, child)
+        +static void attachStyles(styles)
+    }
+
+    Tree --> Task
+    Input --> Tree
+    Clicked --> Input
+    Indicator --> Tree
+    Tree --> Utils
+</code></pre>
+<h2>Super Simple Example</h2>
+<pre class="prettyprint source lang-js"><code>const tasks = {
+    task: [
+        { 
+            name: 'Do the laundry',
+            task: [
+                { name: 'Get the detergent', task: [] },
+                { name: 'Sort the clothes', task: [] },
+                { name: 'Put the clothes in the washing machine', task: [] },
+                { name: 'Turn on the washing machine', task: [] }
+            ] 
+        },
+        { 
+            name: 'Do the dishes',
+            task: [
+                { name: 'Scrape the dishes', task: [] },
+                { name: 'Rinse the dishes', task: [] },
+                { name: 'Put the dishes in the dishwasher', task: [] },
+                { name: 'Turn on the dishwasher', task: [] }
+            ]
+        }
+    ]
+};
+
+const tree = new Tree(tasks, { parent: document.body, edit: true });
+tree.expandAll();
+</code></pre>
+<h2>Features</h2>
+<ul>
+<li>Drag-and-drop tasks</li>
+<li>Indentation for nested tasks</li>
+<li>Expand/collapse tasks</li>
+<li>Edit task names</li>
+<li>Add new tasks</li>
+<li>Delete tasks</li>
+</ul>
+<h2>Tasks</h2>
+<p>Tasks are represented as a JavaScript object, where each task is an object with a <code>name</code> string and a <code>task</code> array of subtasks.</p>
+<h2>License</h2>
+<p>Taskape Task Editor is released under the <a href="https://opensource.org/licenses/MIT">MIT License</a>.</p>
+<pre class="prettyprint source"><code>
+## Credits
+- [David Figatner] </code></pre></article>
+    </section>
+
+
+
+
+
+
+    
+    
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a> on Wed Jul 17 2024 22:24:38 GMT+0300 (Eastern European Summer Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/polyfill.js"></script>
+<script src="scripts/linenumber.js"></script>
+
+
+
+
+<script type="module">
+  import mermaid from 'https://unpkg.com/mermaid@10.8.0/dist/mermaid.esm.min.mjs';
+
+  function renderMermaidLangs() {
+    [...document.querySelectorAll('.lang-mermaid')].forEach((markdownGraphEl, i) => {
+      const graphDefinition = markdownGraphEl.innerText;
+
+      mermaid.render(`mermaid_graph_${i}`, graphDefinition)
+        .then(({ svg }) => {
+          const graphContainerEl = document.createElement('div');
+          graphContainerEl.innerHTML = svg;
+          const graphEl = graphContainerEl.querySelector('svg');
+
+          graphEl.style.display = 'block';
+          graphEl.style.margin = '0 auto';
+          graphContainerEl.style.margin = '50px 0';
+
+          markdownGraphEl.replaceWith(graphContainerEl);
+        })
+        .catch((err) => console.error('Error rendering Mermaid diagram:', err));
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    mermaid.initialize({ startOnLoad: true });
+    renderMermaidLangs();
+  });
+</script>
 </body>
+</html>

@@ -1,8 +1,102 @@
 # Taskape Task Editor
-A vanilla drag-and-drop UI tree for managing tasks, based on David Figatner's drag-and-drop implementation.
+A vanilla drag-and-drop UI tree for managing tasks, based on David Figatner's drag-and-drop ui tree
 
 ## Rationale
 Taskape Task Editor is designed to provide an easy-to-use, drag-and-drop interface for managing hierarchical tasks without the need for frameworks like Vue or React.
+
+## Interaction Diagram
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Tree
+    participant Input
+    participant Clicked
+
+    User->>Tree: new Tree(tasks, { parent: document.body, edit: true })
+    Tree->>Input: constructor(tree)
+    Input->>Clicked: clicked(element, callback, options)
+    User->>Tree: expandAll()
+    Tree->>User: Expands all tasks
+    User->>Tree: addTask('New Task')
+    Tree->>User: Task added
+    User->>Tree: removeTask('Task ID')
+    Tree->>User: Task removed
+    User->>Tree: editTask('Task ID', 'New Name')
+    Tree->>User: Task edited
+```
+
+## UML Class Diagram
+
+```mermaid
+classDiagram
+    class Tree {
+        +Task[] tasks
+        +Tree(Task[] tasks)
+        +void addTask(string name)
+        +void removeTask(string name)
+        +Task getTask(string name)
+        +void updateTaskName(string oldName, string newName)
+        +Task[] listTasks()
+    }
+
+    class Task {
+        +string name
+        +Task[] task
+        +Task(string name, Task[] task)
+        +void updateName(string newName)
+    }
+
+    class Clicked {
+        +Clicked(element, callback, options)
+        +void destroy()
+        +void touchstart(e)
+        +void touchmove(e)
+        +void touchcancel()
+        +void touchend(e)
+        +void mouseclick(e)
+        +void mousedblclick(e)
+    }
+
+    class Input {
+        +Input(Tree tree)
+        +void _down(e)
+        +void _hold()
+        +void _checkThreshold(e)
+        +void _pickup()
+        +void _move(e)
+        +void _up(e)
+        +void _moveData()
+        +void _indicatorMarginLeft(value)
+    }
+
+    class Indicator {
+        +Indicator(Tree tree)
+        +HTMLElement get()
+        +void set_marginLeft(value)
+    }
+
+    class Utils {
+        +static HTMLElement el(element)
+        +static number distance(x1, y1, x2, y2)
+        +static number distancePointElement(px, py, element)
+        +static boolean inside(x, y, element)
+        +static PointLike toGlobal(e)
+        +static object options(options, defaults)
+        +static void style(element, style, value)
+        +static number percentage(xa1, ya1, xa2, ya2, xb1, yb1, xb2, yb2)
+        +static void removeChildren(element)
+        +static HTMLElement html(options)
+        +static number getChildIndex(parent, child)
+        +static void attachStyles(styles)
+    }
+
+    Tree --> Task
+    Input --> Tree
+    Clicked --> Input
+    Indicator --> Tree
+    Tree --> Utils
+```
 
 ## Super Simple Example
 ```js
@@ -41,28 +135,10 @@ tree.expandAll();
 - Add new tasks
 - Delete tasks
 
-## Usage
-1. Include `taskape.js` in your project
-2. Create a new `Tree` instance with your tasks and options
-3. Call `expandAll()` to expand all tasks
-4. Call `collapseAll()` to collapse all tasks
-5. Call `getTasks()` to get the updated tasks
-
-## Options
-- `parent`: parent element to append the tree to
-- `edit`: editable task names
-- `delete`: delete tasks
-- `add`: add tasks
-- `expand`: expand tasks
-- `collapse`: collapse tasks
 
 ## Tasks
 Tasks are represented as a JavaScript object, where each task is an object with a `name` string and a `task` array of subtasks.
 
-## Methods
-- `expandAll()`: expand all tasks
-- `collapseAll()`: collapse all tasks
-- `getTasks()`: get the updated tasks
 
 ## License
 Taskape Task Editor is released under the [MIT License](https://opensource.org/licenses/MIT).
