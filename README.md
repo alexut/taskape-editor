@@ -12,90 +12,150 @@ sequenceDiagram
     participant Tree
     participant Input
     participant Clicked
+    participant Leaf
+    participant TaskEditor
 
-    User->>Tree: new Tree(tasks, { parent: document.body, edit: true })
-    Tree->>Input: constructor(tree)
-    Input->>Clicked: clicked(element, callback, options)
-    User->>Tree: expandAll()
-    Tree->>User: Expands all tasks
-    User->>Tree: addTask('New Task')
-    Tree->>User: Task added
-    User->>Tree: removeTask('Task ID')
-    Tree->>User: Task removed
-    User->>Tree: editTask('Task ID', 'New Name')
-    Tree->>User: Task edited
+    User->>Leaf: mousedown/touchstart (double-click)
+    Leaf->>Clicked: touchstart(e)
+    Leaf->>Clicked: touchend(e)
+    Clicked->>Clicked: mousedblclick(e)
+    Clicked->>TaskEditor: editTask(Leaf)
+    TaskEditor->>TaskEditor: taskArea.innerText = leaf.data.name
+    TaskEditor->>TaskEditor: Show editTaskBtn, Hide createTaskBtn
+
+    User->>TaskEditor: Edit text in taskArea
+    TaskEditor->>TaskEditor: onTaskAreaInput()
+    TaskEditor->>TaskEditor: Update button visibility
+
+    User->>TaskEditor: Click editTaskBtn
+    TaskEditor->>Leaf: leaf.data.name = taskArea.innerText.trim()
+    TaskEditor->>Tree: tree.update()
+    Tree->>Tree: _createLeaf(data, level) (for each leaf)
+    Tree->>Tree: Update DOM structure
+    TaskEditor->>TaskEditor: resetTaskArea()
 ```
 
 ## UML Class Diagram
 
 ```mermaid
 classDiagram
-    class Tree {
-        +Task[] tasks
-        +Tree(Task[] tasks)
-        +void addTask(string name)
-        +void removeTask(string name)
-        +Task getTask(string name)
-        +void updateTaskName(string oldName, string newName)
-        +Task[] listTasks()
-    }
+  class Tree {
+    -_options: Object
+    -_input: Input
+    -taskEditor: TaskEditor
+    +element: HTMLElement
+    +_selection: HTMLElement
+    +constructor(tree: Object, options: Object)
+    -_createLeaf(data: Object, level: number): Leaf
+    -_getChildren(leaf: HTMLElement, all: boolean): HTMLElement[]
+    +expandAll()
+    -_expandChildren(leaf: HTMLElement)
+    +collapseAll()
+    -_collapseChildren(leaf: HTMLElement)
+    +toggleExpand(leaf: HTMLElement)
+    +expand(leaf: HTMLElement) 
+    +collapse(leaf: HTMLElement) 
+    +update()
+    +editData(data: Object)
+    +getLeaf(leaf: HTMLElement, root: HTMLElement)
+    +findInTree(leaf: HTMLElement, callback: Function)
+    -_getFirstChild(element: HTMLElement, all: boolean): HTMLElement
+    -_getLastChild(element: HTMLElement, all: boolean): HTMLElement
+    -_getParent(element: HTMLElement): HTMLElement
+  }
 
-    class Task {
-        +string name
-        +Task[] task
-        +Task(string name, Task[] task)
-        +void updateName(string newName)
-    }
+  class Leaf {
+    -tree: Tree
+    -data: Object
+    -level: number
+    -element: HTMLElement
+    +constructor(tree: Tree, data: Object, level: number)
+    +getChildren(all: boolean): HTMLElement[]
+    +hideIcon()
+    +showIcon()
+    +expand()
+    +collapse()
+    +selectLeaf()
+  }
 
-    class Clicked {
-        +Clicked(element, callback, options)
-        +void destroy()
-        +void touchstart(e)
-        +void touchmove(e)
-        +void touchcancel()
-        +void touchend(e)
-        +void mouseclick(e)
-        +void mousedblclick(e)
-    }
+  class Input {
+    +_tree: Tree
+    +_indicator: Indicator
+    +_target: HTMLElement
+    +_isDown: Object
+    +_offset: Object
+    +_holdTimeout: number
+    +_moving: boolean
+    +_old: Object
+    +_closest: Object
+    +constructor(tree: Tree)
+    -_down(e: Event)
+    -_hold()
+    -_checkThreshold(e: Event): boolean
+    -_pickup()
+    -_findClosest(e: Event, entry: HTMLElement)
+    -_move(e: Event)
+    -_up(e)
+    -_moveData()
+    -_indicatorMarginLeft(value: number)
+  }
 
-    class Input {
-        +Input(Tree tree)
-        +void _down(e)
-        +void _hold()
-        +void _checkThreshold(e)
-        +void _pickup()
-        +void _move(e)
-        +void _up(e)
-        +void _moveData()
-        +void _indicatorMarginLeft(value)
-    }
+  class Indicator {
+    +_indicator: HTMLElement
+    +constructor(tree: Tree)
+    +get(): HTMLElement
+    +set marginLeft(value: number)
+  }
 
-    class Indicator {
-        +Indicator(Tree tree)
-        +HTMLElement get()
-        +void set_marginLeft(value)
-    }
+  class Clicked {
+    +Clicked(element, callback, options)
+    +destroy()
+    +touchstart(e)
+    +touchmove(e)
+    +touchcancel()
+    +touchend(e)
+    +mouseclick(e)
+    +mousedblclick(e)
+  }
 
-    class Utils {
-        +static HTMLElement el(element)
-        +static number distance(x1, y1, x2, y2)
-        +static number distancePointElement(px, py, element)
-        +static boolean inside(x, y, element)
-        +static PointLike toGlobal(e)
-        +static object options(options, defaults)
-        +static void style(element, style, value)
-        +static number percentage(xa1, ya1, xa2, ya2, xb1, yb1, xb2, yb2)
-        +static void removeChildren(element)
-        +static HTMLElement html(options)
-        +static number getChildIndex(parent, child)
-        +static void attachStyles(styles)
-    }
+  class TaskEditor {
+    +tree: Tree
+    +currentTask: Leaf | null
+    +taskArea: HTMLElement
+    +createTaskBtn: HTMLElement
+    +editTaskBtn: HTMLElement
+    +placeholderText: string
+    +constructor(tree: Tree)
+    +setupPlaceholder()
+    +createTask()
+    +updateTask()
+    +onTaskAreaInput()
+    +resetTaskArea()
+    +editTask(leaf: Leaf)
+  }
 
-    Tree --> Task
-    Input --> Tree
-    Clicked --> Input
-    Indicator --> Tree
-    Tree --> Utils
+  class Utils {
+    +static el(element)
+    +static distance(x1, y1, x2, y2)
+    +static distancePointElement(px, py, element)
+    +static boolean inside(x, y, element)
+    +static PointLike toGlobal(e)
+    +static object options(options, defaults)
+    +static void style(element, style, value)
+    +static number percentage(xa1, ya1, xa2, ya2, xb1, yb1, xb2, yb2)
+    +static void removeChildren(element)
+    +static HTMLElement html(options)
+    +static number getChildIndex(parent, child)
+    +static void attachStyles(styles)
+  }
+
+  Tree --> Leaf
+  Tree --> TaskEditor
+  Input --> Tree
+  Input --> Indicator
+  Clicked --> Input
+  Tree --> Utils
+
 ```
 
 ## Super Simple Example

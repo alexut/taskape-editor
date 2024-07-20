@@ -23,10 +23,10 @@ export class Input {
                 alreadySelected = true;
             } else {
                 if (this._tree._selection) {
-                    this._tree._selection.name.classList.remove(`${this._tree.prefixClassName}-select`);
+                    this._tree._selection.querySelector(`.${this._tree.prefixClassName}-name`).classList.remove(`${this._tree.prefixClassName}-select`);
                 }
                 this._tree._selection = this._target;
-                this._tree._selection.name.classList.add(`${this._tree.prefixClassName}-select`);
+                this._tree._selection.querySelector(`.${this._tree.prefixClassName}-name`).classList.add(`${this._tree.prefixClassName}-select`);
             }
             this._isDown = { x: e.pageX, y: e.pageY, alreadySelected };
             const pos = utils.toGlobal(this._target);
@@ -41,10 +41,10 @@ export class Input {
             this._target = e.currentTarget.parentNode.parentNode;
             if (this._tree._selection !== this._target) {
                 if (this._tree._selection) {
-                    this._tree._selection.name.classList.remove(`${this._tree.prefixClassName}-select`);
+                    this._tree._selection.querySelector(`.${this._tree.prefixClassName}-name`).classList.remove(`${this._tree.prefixClassName}-select`);
                 }
                 this._tree._selection = this._target;
-                this._tree._selection.name.classList.add(`${this._tree.prefixClassName}-select`);
+                this._tree._selection.querySelector(`.${this._tree.prefixClassName}-name`).classList.add(`${this._tree.prefixClassName}-select`);
                 this._tree.emit('selection-change', this._target, this._tree);
             }
         }
@@ -87,27 +87,27 @@ export class Input {
         this._old = {
             opacity: this._target.style.opacity || 'unset',
             position: this._target.style.position || 'unset',
-            boxShadow: this._target.name.style.boxShadow || 'unset'
+            boxShadow: this._target.querySelector(`.${this._tree.prefixClassName}-name`).style.boxShadow || 'unset'
         };
         this._target.style.position = 'absolute';
-        this._target.name.style.boxShadow = '3px 3px 5px rgba(0,0,0,0.25)';
+        this._target.querySelector(`.${this._tree.prefixClassName}-name`).style.boxShadow = '3px 3px 5px rgba(0,0,0,0.25)';
         this._target.style.left = pos.x + 'px';
         this._target.style.top = pos.y + 'px';
         this._target.style.opacity = this._tree.dragOpacity;
         if (this._tree._getChildren(parent, true).length === 0) {
-            this._tree._hideIcon(parent);
+            parent.hideIcon();
         }
     }
 
     _findClosest(e, entry) {
-        const pos = utils.toGlobal(entry.name);
-        if (pos.y + entry.name.offsetHeight / 2 <= e.pageY) {
+        const pos = utils.toGlobal(entry.querySelector(`.${this._tree.prefixClassName}-name`));
+        if (pos.y + entry.querySelector(`.${this._tree.prefixClassName}-name`).offsetHeight / 2 <= e.pageY) {
             if (!this._closest.foundAbove) {
-                if (utils.inside(e.pageX, e.pageY, entry.name)) {
+                if (utils.inside(e.pageX, e.pageY, entry.querySelector(`.${this._tree.prefixClassName}-name`))) {
                     this._closest.foundAbove = true;
                     this._closest.above = entry;
                 } else {
-                    const distance = utils.distancePointElement(e.pageX, e.pageY, entry.name);
+                    const distance = utils.distancePointElement(e.pageX, e.pageY, entry.querySelector(`.${this._tree.prefixClassName}-name`));
                     if (distance < this._closest.distanceAbove) {
                         this._closest.distanceAbove = distance;
                         this._closest.above = entry;
@@ -115,11 +115,11 @@ export class Input {
                 }
             }
         } else if (!this._closest.foundBelow) {
-            if (utils.inside(e.pageX, e.pageY, entry.name)) {
+            if (utils.inside(e.pageX, e.pageY, entry.querySelector(`.${this._tree.prefixClassName}-name`))) {
                 this._closest.foundBelow = true;
                 this._closest.below = entry;
             } else {
-                const distance = utils.distancePointElement(e.pageX, e.pageY, entry.name);
+                const distance = utils.distancePointElement(e.pageX, e.pageY, entry.querySelector(`.${this._tree.prefixClassName}-name`));
                 if (distance < this._closest.distanceBelow) {
                     this._closest.distanceBelow = distance;
                     this._closest.below = entry;
@@ -139,7 +139,7 @@ export class Input {
             indicator.remove();
             this._target.style.left = e.pageX - this._offset.x + 'px';
             this._target.style.top = e.pageY - this._offset.y + 'px';
-            const x = utils.toGlobal(this._target.name).x;
+            const x = utils.toGlobal(this._target.querySelector(`.${this._tree.prefixClassName}-name`)).x;
             this._closest = { distanceAbove: Infinity, distanceBelow: Infinity };
             for (let child of this._tree._getChildren()) {
                 this._findClosest(e, child);
@@ -151,7 +151,7 @@ export class Input {
                 element.insertBefore(indicator, this._tree._getFirstChild(element));
             } else if (!this._closest.below) {
                 // leaf [] null
-                let pos = utils.toGlobal(this._closest.above.name);
+                let pos = utils.toGlobal(this._closest.above.querySelector(`.${this._tree.prefixClassName}-name`));
                 if (x > pos.x + indentation) {
                     this._closest.above.insertBefore(indicator, this._tree._getFirstChild(this._closest.above, true));
                 } else if (x > pos.x - indentation) {
@@ -161,7 +161,7 @@ export class Input {
                     while (parent !== element && x < pos.x) {
                         parent = this._tree._getParent(parent);
                         if (parent !== element) {
-                            pos = utils.toGlobal(parent.name);
+                            pos = utils.toGlobal(parent.querySelector(`.${this._tree.prefixClassName}-name`));
                         }
                     }
                     parent.appendChild(indicator);
@@ -171,7 +171,7 @@ export class Input {
                 this._closest.above.insertBefore(indicator, this._closest.below);
             } else if (this._closest.below.parentNode === this._closest.above.parentNode) {
                 // sibling [] sibling
-                const pos = utils.toGlobal(this._closest.above.name);
+                const pos = utils.toGlobal(this._closest.above.querySelector(`.${this._tree.prefixClassName}-name`));
                 if (x > pos.x + indentation) {
                     this._closest.above.insertBefore(indicator, this._tree._getLastChild(this._closest.above, true));
                 } else {
@@ -179,18 +179,18 @@ export class Input {
                 }
             } else {
                 // child [] parent^
-                let pos = utils.toGlobal(this._closest.above.name);
+                let pos = utils.toGlobal(this._closest.above.querySelector(`.${this._tree.prefixClassName}-name`));
                 if (x > pos.x + indentation) {
                     this._closest.above.insertBefore(indicator, this._tree._getLastChild(this._closest.above, true));
                 } else if (x > pos.x - indentation) {
                     this._closest.above.parentNode.appendChild(indicator);
-                } else if (x < utils.toGlobal(this._closest.below.name).x) {
+                } else if (x < utils.toGlobal(this._closest.below.querySelector(`.${this._tree.prefixClassName}-name`)).x) {
                     this._closest.below.parentNode.insertBefore(indicator, this._closest.below);
                 } else {
                     let parent = this._closest.above;
                     while (parent.parentNode !== this._closest.below.parentNode && x < pos.x) {
                         parent = this._tree._getParent(parent);
-                        pos = utils.toGlobal(parent.name);
+                        pos = utils.toGlobal(parent.querySelector(`.${this._tree.prefixClassName}-name`));
                     }
                     parent.appendChild(indicator);
                 }
@@ -209,9 +209,12 @@ export class Input {
                 const indicator = this._indicator.get();
                 indicator.parentNode.insertBefore(this._target, indicator);
                 this._tree.expand(indicator.parentNode);
-                this._tree._showIcon(indicator.parentNode);
+                const leafInstance = indicator.parentNode.__leafInstance;
+                if (leafInstance) {
+                    leafInstance.showIcon();
+                }
                 this._target.style.position = this._old.position === 'unset' ? '' : this._old.position;
-                this._target.name.style.boxShadow = this._old.boxShadow === 'unset' ? '' : this._old.boxShadow;
+                this._target.querySelector(`.${this._tree.prefixClassName}-name`).style.boxShadow = this._old.boxShadow === 'unset' ? '' : this._old.boxShadow;
                 this._target.style.opacity = this._old.opacity === 'unset' ? '' : this._old.opacity;
                 indicator.remove();
                 this._moveData();

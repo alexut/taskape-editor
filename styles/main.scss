@@ -1,0 +1,91 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+$font-stack: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+$font-size: 1.25em;
+$task-bg-color: rgb(230, 230, 230);
+$indicator-bg-color: rgb(150, 150, 255);
+$selected-bg-color: rgb(200, 200, 200);
+$leaf-handler-border-color: red;
+
+.font {
+    font-family: $font-stack;
+    font-size: $font-size;
+}
+
+.mb-task-leaf {
+    /* Styles for leaf elements */
+    font-size: 1.25rem;
+    font-family: $font-stack;
+}
+
+.mb-task-content {
+    /* Styles for content elements */
+    display: flex;
+    align-items: center;
+}
+
+.mb-task-expand {
+    /* Styles for expand icons */
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+
+    &::before {
+        content: '+';
+    }
+
+    &.hidden::before {
+        content: '';
+    }
+
+    &.expanded::before {
+        content: '-';
+    }
+}
+
+.mb-task-name {
+    /* Styles for name elements */
+    padding: 0.5em 1em;
+    margin: 0.1em;
+    background: $task-bg-color;
+    user-select: none;
+    cursor: pointer;
+    width: 200px;
+}
+
+.mb-task-indicator {
+    /* Styles for indicator elements */
+    background: $indicator-bg-color;
+    height: 5px;
+    width: 100px;
+    padding: 0 1em;
+}
+
+.mb-task-select {
+    /* Styles for selected elements */
+    background: $selected-bg-color;
+}
+
+.mb-task-leaf-handler {
+    cursor: grab;
+    border: 1px solid $leaf-handler-border-color;
+    width: 10px;
+    height: 10px;
+    display: block;
+}
+
+.suggestion-span {
+    background-color: #e0e0e0;
+    border-radius: 3px;
+    padding: 2px 5px;
+    margin: 0 2px;
+    display: inline-flex;
+    align-items: center;
+
+    .remove-suggestion {
+        margin-left: 5px;
+        cursor: pointer;
+    }
+}

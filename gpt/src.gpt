@@ -13,90 +13,150 @@ sequenceDiagram
     participant Tree
     participant Input
     participant Clicked
+    participant Leaf
+    participant TaskEditor
 
-    User->>Tree: new Tree(tasks, { parent: document.body, edit: true })
-    Tree->>Input: constructor(tree)
-    Input->>Clicked: clicked(element, callback, options)
-    User->>Tree: expandAll()
-    Tree->>User: Expands all tasks
-    User->>Tree: addTask('New Task')
-    Tree->>User: Task added
-    User->>Tree: removeTask('Task ID')
-    Tree->>User: Task removed
-    User->>Tree: editTask('Task ID', 'New Name')
-    Tree->>User: Task edited
+    User->>Leaf: mousedown/touchstart (double-click)
+    Leaf->>Clicked: touchstart(e)
+    Leaf->>Clicked: touchend(e)
+    Clicked->>Clicked: mousedblclick(e)
+    Clicked->>TaskEditor: editTask(Leaf)
+    TaskEditor->>TaskEditor: taskArea.innerText = leaf.data.name
+    TaskEditor->>TaskEditor: Show editTaskBtn, Hide createTaskBtn
+
+    User->>TaskEditor: Edit text in taskArea
+    TaskEditor->>TaskEditor: onTaskAreaInput()
+    TaskEditor->>TaskEditor: Update button visibility
+
+    User->>TaskEditor: Click editTaskBtn
+    TaskEditor->>Leaf: leaf.data.name = taskArea.innerText.trim()
+    TaskEditor->>Tree: tree.update()
+    Tree->>Tree: _createLeaf(data, level) (for each leaf)
+    Tree->>Tree: Update DOM structure
+    TaskEditor->>TaskEditor: resetTaskArea()
 ```
 
 ## UML Class Diagram
 
 ```mermaid
 classDiagram
-    class Tree {
-        +Task[] tasks
-        +Tree(Task[] tasks)
-        +void addTask(string name)
-        +void removeTask(string name)
-        +Task getTask(string name)
-        +void updateTaskName(string oldName, string newName)
-        +Task[] listTasks()
-    }
+  class Tree {
+    -_options: Object
+    -_input: Input
+    -taskEditor: TaskEditor
+    +element: HTMLElement
+    +_selection: HTMLElement
+    +constructor(tree: Object, options: Object)
+    -_createLeaf(data: Object, level: number): Leaf
+    -_getChildren(leaf: HTMLElement, all: boolean): HTMLElement[]
+    +expandAll()
+    -_expandChildren(leaf: HTMLElement)
+    +collapseAll()
+    -_collapseChildren(leaf: HTMLElement)
+    +toggleExpand(leaf: HTMLElement)
+    +expand(leaf: HTMLElement) 
+    +collapse(leaf: HTMLElement) 
+    +update()
+    +editData(data: Object)
+    +getLeaf(leaf: HTMLElement, root: HTMLElement)
+    +findInTree(leaf: HTMLElement, callback: Function)
+    -_getFirstChild(element: HTMLElement, all: boolean): HTMLElement
+    -_getLastChild(element: HTMLElement, all: boolean): HTMLElement
+    -_getParent(element: HTMLElement): HTMLElement
+  }
 
-    class Task {
-        +string name
-        +Task[] task
-        +Task(string name, Task[] task)
-        +void updateName(string newName)
-    }
+  class Leaf {
+    -tree: Tree
+    -data: Object
+    -level: number
+    -element: HTMLElement
+    +constructor(tree: Tree, data: Object, level: number)
+    +getChildren(all: boolean): HTMLElement[]
+    +hideIcon()
+    +showIcon()
+    +expand()
+    +collapse()
+    +selectLeaf()
+  }
 
-    class Clicked {
-        +Clicked(element, callback, options)
-        +void destroy()
-        +void touchstart(e)
-        +void touchmove(e)
-        +void touchcancel()
-        +void touchend(e)
-        +void mouseclick(e)
-        +void mousedblclick(e)
-    }
+  class Input {
+    +_tree: Tree
+    +_indicator: Indicator
+    +_target: HTMLElement
+    +_isDown: Object
+    +_offset: Object
+    +_holdTimeout: number
+    +_moving: boolean
+    +_old: Object
+    +_closest: Object
+    +constructor(tree: Tree)
+    -_down(e: Event)
+    -_hold()
+    -_checkThreshold(e: Event): boolean
+    -_pickup()
+    -_findClosest(e: Event, entry: HTMLElement)
+    -_move(e: Event)
+    -_up(e)
+    -_moveData()
+    -_indicatorMarginLeft(value: number)
+  }
 
-    class Input {
-        +Input(Tree tree)
-        +void _down(e)
-        +void _hold()
-        +void _checkThreshold(e)
-        +void _pickup()
-        +void _move(e)
-        +void _up(e)
-        +void _moveData()
-        +void _indicatorMarginLeft(value)
-    }
+  class Indicator {
+    +_indicator: HTMLElement
+    +constructor(tree: Tree)
+    +get(): HTMLElement
+    +set marginLeft(value: number)
+  }
 
-    class Indicator {
-        +Indicator(Tree tree)
-        +HTMLElement get()
-        +void set_marginLeft(value)
-    }
+  class Clicked {
+    +Clicked(element, callback, options)
+    +destroy()
+    +touchstart(e)
+    +touchmove(e)
+    +touchcancel()
+    +touchend(e)
+    +mouseclick(e)
+    +mousedblclick(e)
+  }
 
-    class Utils {
-        +static HTMLElement el(element)
-        +static number distance(x1, y1, x2, y2)
-        +static number distancePointElement(px, py, element)
-        +static boolean inside(x, y, element)
-        +static PointLike toGlobal(e)
-        +static object options(options, defaults)
-        +static void style(element, style, value)
-        +static number percentage(xa1, ya1, xa2, ya2, xb1, yb1, xb2, yb2)
-        +static void removeChildren(element)
-        +static HTMLElement html(options)
-        +static number getChildIndex(parent, child)
-        +static void attachStyles(styles)
-    }
+  class TaskEditor {
+    +tree: Tree
+    +currentTask: Leaf | null
+    +taskArea: HTMLElement
+    +createTaskBtn: HTMLElement
+    +editTaskBtn: HTMLElement
+    +placeholderText: string
+    +constructor(tree: Tree)
+    +setupPlaceholder()
+    +createTask()
+    +updateTask()
+    +onTaskAreaInput()
+    +resetTaskArea()
+    +editTask(leaf: Leaf)
+  }
 
-    Tree --> Task
-    Input --> Tree
-    Clicked --> Input
-    Indicator --> Tree
-    Tree --> Utils
+  class Utils {
+    +static el(element)
+    +static distance(x1, y1, x2, y2)
+    +static distancePointElement(px, py, element)
+    +static boolean inside(x, y, element)
+    +static PointLike toGlobal(e)
+    +static object options(options, defaults)
+    +static void style(element, style, value)
+    +static number percentage(xa1, ya1, xa2, ya2, xb1, yb1, xb2, yb2)
+    +static void removeChildren(element)
+    +static HTMLElement html(options)
+    +static number getChildIndex(parent, child)
+    +static void attachStyles(styles)
+  }
+
+  Tree --> Leaf
+  Tree --> TaskEditor
+  Input --> Tree
+  Input --> Indicator
+  Clicked --> Input
+  Tree --> Utils
+
 ```
 
 ## Super Simple Example
@@ -155,8 +215,7 @@ index.html:
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Task Editor</title>
-    <link rel="stylesheet" href="index.css">
-    <script src="index.js" type="module"></script>
+    <link rel="stylesheet" href="main.css">
     <script>
         window.suggestions = {
             tags: {
@@ -172,11 +231,44 @@ index.html:
                 example: ['oracle1', 'oracle2', '?oracle']
             }
         };
+
+        window.tasks = {
+            task: [
+                { 
+                    name: 'Do the laundry',
+                    task: [
+                        { name: 'Get the detergent', task: [] },
+                        { name: 'Sort the clothes', task: [] },
+                        { name: 'Put the clothes in the washing machine', task: [] },
+                        { name: 'Turn on the washing machine', task: [] }
+                    ] 
+                },
+                { 
+                    name: 'Do the dishes',
+                    task: [
+                        { name: 'Scrape the dishes', task: [] },
+                        { name: 'Rinse the dishes', task: [] },
+                        { name: 'Put the dishes in the dishwasher', task: [] },
+                        { name: 'Turn on the dishwasher', task: [] }
+                    ]
+                }
+            ]
+        };
     </script>
 </head>
-<body>
-    <div class="title">Taskape Task Editor</div>
-    <div id="tree"></div>
+<body class="bg-gray-100">
+    <div class="title text-3xl font-bold text-center py-4">Taskape Task Editor</div>
+    <div id="tasktree" class="p-4"></div>
+    <div id="taskeditor" class="bg-white shadow-md rounded-lg p-4 m-4">
+        <div id="taskarea" class="border p-2 rounded" contenteditable data-placeholder="Add your task here">
+            Add your task here
+        </div>
+        <div class="taskoptions mt-4">
+            <button id="createTaskBtn" class="bg-blue-500 text-white py-2 px-4 rounded">Add</button>
+            <button class="hidden bg-green-500 text-white py-2 px-4 rounded" id="editTaskBtn">Edit</button> 
+        </div>
+    </div>
+    <script src="index.js"></script>
 </body>
 </html>
 
@@ -346,29 +438,158 @@ export const defaults = {
 };
 
 
+src/editor.js:
+'use strict';
+
+import * as utils from './utils';
+
+export class TaskEditor {
+    constructor(tree) {
+        this.tree = tree;
+        this.currentTask = null;
+        this.taskArea = document.getElementById('taskarea');
+        this.createTaskBtn = document.getElementById('createTaskBtn');
+        this.editTaskBtn = document.getElementById('editTaskBtn');
+        this.placeholderText = this.taskArea.getAttribute('data-placeholder');
+
+        this.createTaskBtn.addEventListener('click', () => this.createTask());
+        this.editTaskBtn.addEventListener('click', () => this.updateTask());
+        this.taskArea.addEventListener('input', () => this.onTaskAreaInput());
+
+        this.setupPlaceholder();
+    }
+
+    setupPlaceholder() {
+        const setPlaceholder = () => {
+            if (this.taskArea.innerText.trim() === '') {
+                this.taskArea.innerText = this.placeholderText;
+                this.taskArea.classList.add('placeholder');
+            }
+        };
+
+        const removePlaceholder = () => {
+            if (this.taskArea.innerText === this.placeholderText) {
+                this.taskArea.innerText = '';
+                this.taskArea.classList.remove('placeholder');
+            }
+        };
+
+        this.taskArea.addEventListener('focus', removePlaceholder);
+        this.taskArea.addEventListener('blur', setPlaceholder);
+
+        setPlaceholder(); // Initial call to set the placeholder
+    }
+
+    createTask() {
+        const taskName = this.taskArea.innerText.trim();
+        if (taskName && taskName !== this.placeholderText) {
+            const selectedLeaf = document.querySelector(`.${this.tree.prefixClassName}-leaf-select`);
+            const newTask = { name: taskName, task: [] };
+
+            if (selectedLeaf) {
+                const selectedLeafInstance = selectedLeaf.__leafInstance;
+                if (selectedLeafInstance && selectedLeafInstance.data) {
+                    const parentTask = selectedLeafInstance.data.parent;
+                    if (parentTask) {
+                        const siblingIndex = parentTask.task.indexOf(selectedLeafInstance.data);
+                        parentTask.task.splice(siblingIndex + 1, 0, newTask);
+                    } else {
+                        console.error('Parent task not found for the selected leaf');
+                    }
+                } else {
+                    console.error('Selected leaf instance or its data is not defined');
+                }
+            } else {
+                if (this.tree.element.data && this.tree.element.data.task) {
+                    this.tree.element.data.task.push(newTask);
+                } else {
+                    console.error('Tree data or tree data task array is not defined');
+                }
+            }
+
+            this.tree.update();
+            this.resetTaskArea();
+        }
+    }
+
+    updateTask() {
+        if (this.currentTask) {
+            this.currentTask.data.name = this.taskArea.innerText.trim();
+            this.tree.update();
+            this.resetTaskArea();
+        }
+    }
+
+    onTaskAreaInput() {
+        const taskName = this.taskArea.innerText.trim();
+        if (this.currentTask && taskName && taskName !== this.placeholderText) {
+            this.editTaskBtn.classList.remove('hidden');
+            this.createTaskBtn.classList.add('hidden');
+        } else {
+            this.editTaskBtn.classList.add('hidden');
+            this.createTaskBtn.classList.remove('hidden');
+        }
+    }
+
+    resetTaskArea() {
+        this.taskArea.innerText = '';
+        this.taskArea.blur(); // Triggers the placeholder to be set
+        this.editTaskBtn.classList.add('hidden');
+        this.createTaskBtn.classList.remove('hidden');
+        this.currentTask = null;
+    }
+
+    editTask(leaf) {
+        this.currentTask = leaf;
+        this.taskArea.innerText = leaf.data.name;
+        this.editTaskBtn.classList.remove('hidden');
+        this.createTaskBtn.classList.add('hidden');
+        this.taskArea.focus();
+    }
+}
+
+
 src/indicator.js:
-import * as utils from './utils'
+import * as utils from './utils';
 
 export class Indicator {
     constructor(tree) {
-        this._indicator = utils.html()
-        this._indicator.style.marginLeft = tree.indentation + 'px'
-        const content = utils.html({ parent: this._indicator })
-        content.style.display = 'flex'
-        this._indicator.indentation = utils.html({ parent: content })
-        this._indicator.icon = utils.html({ parent: content, className: `${tree.prefixClassName}-expand` })
-        this._indicator.icon.style.height = 0
-        this._indicator.line = utils.html({ parent: content, className: `${tree.prefixClassName}-indicator` })
+        this._indicator = utils.html();
+        this._indicator.style.marginLeft = tree.indentation + 'px';
+        const content = utils.html({ parent: this._indicator });
+        content.style.display = 'flex';
+        this._indicator.indentation = utils.html({ parent: content });
+        this._indicator.icon = utils.html({ parent: content, className: `${tree.prefixClassName}-expand` });
+        this._indicator.icon.style.height = 0;
+        this._indicator.line = utils.html({ parent: content, className: `${tree.prefixClassName}-indicator` });
     }
 
     get() {
-        return this._indicator
+        return this._indicator;
     }
 
-    set _marginLeft(value) {
-        this._indicator.style.marginLeft = value + 'px'
+    set marginLeft(value) {
+        this._indicator.style.marginLeft = value + 'px';
     }
 }
+
+
+src/init.js:
+import { Tree } from './tree';
+import { TaskEditor } from './editor';
+
+function initializeTree() {
+    const tasks = window.tasks;
+    const tree = new Tree(tasks, { parent: document.getElementById('tasktree') });
+    tree.expandAll();
+    window.taskEditor = new TaskEditor(tree); // Ensure taskEditor is assigned to the tree instance
+    tree.taskEditor = window.taskEditor;
+}
+
+window.onload = function () {
+    initializeTree();
+};
+
 
 src/input.js:
 'use strict';
@@ -396,10 +617,10 @@ export class Input {
                 alreadySelected = true;
             } else {
                 if (this._tree._selection) {
-                    this._tree._selection.name.classList.remove(`${this._tree.prefixClassName}-select`);
+                    this._tree._selection.querySelector(`.${this._tree.prefixClassName}-name`).classList.remove(`${this._tree.prefixClassName}-select`);
                 }
                 this._tree._selection = this._target;
-                this._tree._selection.name.classList.add(`${this._tree.prefixClassName}-select`);
+                this._tree._selection.querySelector(`.${this._tree.prefixClassName}-name`).classList.add(`${this._tree.prefixClassName}-select`);
             }
             this._isDown = { x: e.pageX, y: e.pageY, alreadySelected };
             const pos = utils.toGlobal(this._target);
@@ -414,10 +635,10 @@ export class Input {
             this._target = e.currentTarget.parentNode.parentNode;
             if (this._tree._selection !== this._target) {
                 if (this._tree._selection) {
-                    this._tree._selection.name.classList.remove(`${this._tree.prefixClassName}-select`);
+                    this._tree._selection.querySelector(`.${this._tree.prefixClassName}-name`).classList.remove(`${this._tree.prefixClassName}-select`);
                 }
                 this._tree._selection = this._target;
-                this._tree._selection.name.classList.add(`${this._tree.prefixClassName}-select`);
+                this._tree._selection.querySelector(`.${this._tree.prefixClassName}-name`).classList.add(`${this._tree.prefixClassName}-select`);
                 this._tree.emit('selection-change', this._target, this._tree);
             }
         }
@@ -460,27 +681,27 @@ export class Input {
         this._old = {
             opacity: this._target.style.opacity || 'unset',
             position: this._target.style.position || 'unset',
-            boxShadow: this._target.name.style.boxShadow || 'unset'
+            boxShadow: this._target.querySelector(`.${this._tree.prefixClassName}-name`).style.boxShadow || 'unset'
         };
         this._target.style.position = 'absolute';
-        this._target.name.style.boxShadow = '3px 3px 5px rgba(0,0,0,0.25)';
+        this._target.querySelector(`.${this._tree.prefixClassName}-name`).style.boxShadow = '3px 3px 5px rgba(0,0,0,0.25)';
         this._target.style.left = pos.x + 'px';
         this._target.style.top = pos.y + 'px';
         this._target.style.opacity = this._tree.dragOpacity;
         if (this._tree._getChildren(parent, true).length === 0) {
-            this._tree._hideIcon(parent);
+            parent.hideIcon();
         }
     }
 
     _findClosest(e, entry) {
-        const pos = utils.toGlobal(entry.name);
-        if (pos.y + entry.name.offsetHeight / 2 <= e.pageY) {
+        const pos = utils.toGlobal(entry.querySelector(`.${this._tree.prefixClassName}-name`));
+        if (pos.y + entry.querySelector(`.${this._tree.prefixClassName}-name`).offsetHeight / 2 <= e.pageY) {
             if (!this._closest.foundAbove) {
-                if (utils.inside(e.pageX, e.pageY, entry.name)) {
+                if (utils.inside(e.pageX, e.pageY, entry.querySelector(`.${this._tree.prefixClassName}-name`))) {
                     this._closest.foundAbove = true;
                     this._closest.above = entry;
                 } else {
-                    const distance = utils.distancePointElement(e.pageX, e.pageY, entry.name);
+                    const distance = utils.distancePointElement(e.pageX, e.pageY, entry.querySelector(`.${this._tree.prefixClassName}-name`));
                     if (distance < this._closest.distanceAbove) {
                         this._closest.distanceAbove = distance;
                         this._closest.above = entry;
@@ -488,11 +709,11 @@ export class Input {
                 }
             }
         } else if (!this._closest.foundBelow) {
-            if (utils.inside(e.pageX, e.pageY, entry.name)) {
+            if (utils.inside(e.pageX, e.pageY, entry.querySelector(`.${this._tree.prefixClassName}-name`))) {
                 this._closest.foundBelow = true;
                 this._closest.below = entry;
             } else {
-                const distance = utils.distancePointElement(e.pageX, e.pageY, entry.name);
+                const distance = utils.distancePointElement(e.pageX, e.pageY, entry.querySelector(`.${this._tree.prefixClassName}-name`));
                 if (distance < this._closest.distanceBelow) {
                     this._closest.distanceBelow = distance;
                     this._closest.below = entry;
@@ -512,7 +733,7 @@ export class Input {
             indicator.remove();
             this._target.style.left = e.pageX - this._offset.x + 'px';
             this._target.style.top = e.pageY - this._offset.y + 'px';
-            const x = utils.toGlobal(this._target.name).x;
+            const x = utils.toGlobal(this._target.querySelector(`.${this._tree.prefixClassName}-name`)).x;
             this._closest = { distanceAbove: Infinity, distanceBelow: Infinity };
             for (let child of this._tree._getChildren()) {
                 this._findClosest(e, child);
@@ -524,7 +745,7 @@ export class Input {
                 element.insertBefore(indicator, this._tree._getFirstChild(element));
             } else if (!this._closest.below) {
                 // leaf [] null
-                let pos = utils.toGlobal(this._closest.above.name);
+                let pos = utils.toGlobal(this._closest.above.querySelector(`.${this._tree.prefixClassName}-name`));
                 if (x > pos.x + indentation) {
                     this._closest.above.insertBefore(indicator, this._tree._getFirstChild(this._closest.above, true));
                 } else if (x > pos.x - indentation) {
@@ -534,7 +755,7 @@ export class Input {
                     while (parent !== element && x < pos.x) {
                         parent = this._tree._getParent(parent);
                         if (parent !== element) {
-                            pos = utils.toGlobal(parent.name);
+                            pos = utils.toGlobal(parent.querySelector(`.${this._tree.prefixClassName}-name`));
                         }
                     }
                     parent.appendChild(indicator);
@@ -544,7 +765,7 @@ export class Input {
                 this._closest.above.insertBefore(indicator, this._closest.below);
             } else if (this._closest.below.parentNode === this._closest.above.parentNode) {
                 // sibling [] sibling
-                const pos = utils.toGlobal(this._closest.above.name);
+                const pos = utils.toGlobal(this._closest.above.querySelector(`.${this._tree.prefixClassName}-name`));
                 if (x > pos.x + indentation) {
                     this._closest.above.insertBefore(indicator, this._tree._getLastChild(this._closest.above, true));
                 } else {
@@ -552,18 +773,18 @@ export class Input {
                 }
             } else {
                 // child [] parent^
-                let pos = utils.toGlobal(this._closest.above.name);
+                let pos = utils.toGlobal(this._closest.above.querySelector(`.${this._tree.prefixClassName}-name`));
                 if (x > pos.x + indentation) {
                     this._closest.above.insertBefore(indicator, this._tree._getLastChild(this._closest.above, true));
                 } else if (x > pos.x - indentation) {
                     this._closest.above.parentNode.appendChild(indicator);
-                } else if (x < utils.toGlobal(this._closest.below.name).x) {
+                } else if (x < utils.toGlobal(this._closest.below.querySelector(`.${this._tree.prefixClassName}-name`)).x) {
                     this._closest.below.parentNode.insertBefore(indicator, this._closest.below);
                 } else {
                     let parent = this._closest.above;
                     while (parent.parentNode !== this._closest.below.parentNode && x < pos.x) {
                         parent = this._tree._getParent(parent);
-                        pos = utils.toGlobal(parent.name);
+                        pos = utils.toGlobal(parent.querySelector(`.${this._tree.prefixClassName}-name`));
                     }
                     parent.appendChild(indicator);
                 }
@@ -582,9 +803,12 @@ export class Input {
                 const indicator = this._indicator.get();
                 indicator.parentNode.insertBefore(this._target, indicator);
                 this._tree.expand(indicator.parentNode);
-                this._tree._showIcon(indicator.parentNode);
+                const leafInstance = indicator.parentNode.__leafInstance;
+                if (leafInstance) {
+                    leafInstance.showIcon();
+                }
                 this._target.style.position = this._old.position === 'unset' ? '' : this._old.position;
-                this._target.name.style.boxShadow = this._old.boxShadow === 'unset' ? '' : this._old.boxShadow;
+                this._target.querySelector(`.${this._tree.prefixClassName}-name`).style.boxShadow = this._old.boxShadow === 'unset' ? '' : this._old.boxShadow;
                 this._target.style.opacity = this._old.opacity === 'unset' ? '' : this._old.opacity;
                 indicator.remove();
                 this._moveData();
@@ -612,13 +836,113 @@ export class Input {
 }
 
 
+src/leaf.js:
+'use strict';
+
+import clicked from './clicked';
+import * as utils from './utils';
+
+export class Leaf {
+    constructor(data, level, tree) {
+        this.data = data;
+        this.tree = tree;
+        this.level = level;
+        this.element = utils.html({ className: `${tree.prefixClassName}-leaf` });
+        this.element.isLeaf = true;
+        this.element.__leafInstance = this;
+        this.element.data = data;
+        this.element.content = utils.html({ parent: this.element, className: `${tree.prefixClassName}-content` });
+        this.element.style.marginLeft = `${tree.indentation}px`;
+        const iconClass = `${tree.prefixClassName}-expand${data.expanded ? ' expanded' : ''}`;
+        this.element.icon = utils.html({
+            parent: this.element.content,
+            className: iconClass.trim()
+        });
+        this.element.name = utils.html({ parent: this.element.content, html: data.name, className: `${tree.prefixClassName}-name` });
+
+        // Add a handler for dragging
+        this.element.handler = utils.html({ parent: this.element.content, className: `${tree.prefixClassName}-leaf-handler` });
+        this.element.handler.addEventListener('mousedown', e => tree._input._down(e));
+        this.element.handler.addEventListener('touchstart', e => tree._input._down(e));
+
+        // Handle selection on the leaf
+        this.element.name.addEventListener('mousedown', e => {
+            tree._input._down(e);
+            this.selectLeaf();
+        });
+        this.element.name.addEventListener('touchstart', e => {
+            tree._input._down(e);
+            this.selectLeaf();
+        });
+
+        // Use clicked to handle single-click for selection and double-click for updating task area
+        clicked(this.element.name, () => {}, {
+            doubleClickCallback: () => {
+                if (tree.taskEditor && typeof tree.taskEditor.editTask === 'function') {
+                    tree.taskEditor.editTask(this);
+                } else {
+                    console.error('editTask method not found in taskEditor');
+                }
+            }
+        });
+
+        // Ensure the task property is always an array
+        data.task = data.task || [];
+        for (let child of data.task) {
+            const add = new Leaf(child, level + 1, tree);
+            add.data.parent = data;
+            this.element.appendChild(add.element);
+            if (!data.expanded) {
+                add.element.style.display = 'none';
+            }
+        }
+        if (this.getChildren(true).length === 0) {
+            this.hideIcon();
+        }
+        this.element.icon.addEventListener('click', () => tree.toggleExpand(this.element));
+        tree.emit('render', this.element, tree);
+    }
+
+    getChildren(all) {
+        const children = [];
+        for (let child of this.element.children) {
+            if (child.isLeaf && (all || child.style.display !== 'none')) {
+                children.push(child);
+            }
+        }
+        return children;
+    }
+
+    hideIcon() {
+        if (this.element.isLeaf) {
+            this.element.icon.classList.add('hidden');
+        }
+    }
+
+    showIcon() {
+        if (this.element.isLeaf) { 
+            this.element.icon.classList.remove('hidden');
+        }
+    }
+
+    selectLeaf() {
+        const selectedLeaf = document.querySelector(`.${this.tree.prefixClassName}-leaf-select`);
+        if (selectedLeaf) {
+            selectedLeaf.classList.remove(`${this.tree.prefixClassName}-leaf-select`);
+        }
+        this.element.classList.add(`${this.tree.prefixClassName}-leaf-select`);
+    }
+}
+
+
 src/tree.js:
 'use strict';
 
 import Events from 'eventemitter3';
-import clicked from './clicked';
 import { Input } from './input';
 import { defaults } from './defaults';
+import { Leaf } from './leaf';
+import { TaskEditor } from './editor';
 import * as utils from './utils';
 
 export class Tree extends Events {
@@ -626,6 +950,7 @@ export class Tree extends Events {
         super();
         this._options = utils.options(options, defaults);
         this._input = new Input(this);
+        this.taskEditor = new TaskEditor(this);
         if (typeof this._options.element === 'undefined') {
             this.element = document.createElement('div');
         } else {
@@ -702,90 +1027,6 @@ export class Tree extends Events {
         this._options.dragOpacity = value;
     }
 
-    _leaf(data, level) {
-        const leaf = utils.html({ className: `${this.prefixClassName}-leaf` });
-        leaf.isLeaf = true;
-        leaf.data = data;
-        leaf.content = utils.html({ parent: leaf, className: `${this.prefixClassName}-content` });
-        leaf.style.marginLeft = this.indentation + 'px';
-        const iconClass = `${this.prefixClassName}-expand${data.expanded ? ' expanded' : ''}`;
-        leaf.icon = utils.html({
-            parent: leaf.content,
-            className: iconClass.trim()
-        });
-        leaf.name = utils.html({ parent: leaf.content, html: data.name, className: `${this.prefixClassName}-name` });
-
-        // Add a handler for dragging
-        leaf.handler = utils.html({ parent: leaf.content, className: `${this.prefixClassName}-leaf-handler` });
-        leaf.handler.addEventListener('mousedown', e => this._input._down(e));
-        leaf.handler.addEventListener('touchstart', e => this._input._down(e));
-
-        // Handle selection on the leaf
-        leaf.name.addEventListener('mousedown', e => this._input._down(e));
-        leaf.name.addEventListener('touchstart', e => this._input._down(e));
-
-        // Use clicked to handle single-click for selection and double-click for editing
-        clicked(leaf.name, () => {}, {
-            doubleClickCallback: () => {
-                if (this._options.edit) {
-                    leaf.name.setAttribute('contenteditable', true);
-                    leaf.name.focus();
-                }
-            }
-        });
-
-        leaf.name.addEventListener('input', (e) => this._handleTagActionSuggestions(e, leaf));
-
-        leaf.name.addEventListener('blur', () => {
-            if (this._options.edit) {
-                data.name = leaf.name.innerText;
-                leaf.name.removeAttribute('contenteditable');
-                this.emit('name-change', leaf, leaf.name.innerText, this);
-                this.emit('update', leaf, this);
-            }
-        });
-
-        // Ensure the task property is always an array
-        data.task = data.task || [];
-        for (let child of data.task) {
-            const add = this._leaf(child, level + 1);
-            add.data.parent = data;
-            leaf.appendChild(add);
-            if (!data.expanded) {
-                add.style.display = 'none';
-            }
-        }
-        if (this._getChildren(leaf, true).length === 0) {
-            this._hideIcon(leaf);
-        }
-        clicked(leaf.icon, () => this.toggleExpand(leaf));
-        this.emit('render', leaf, this);
-        return leaf;
-    }
-
-    _getChildren(leaf, all) {
-        leaf = leaf || this.element;
-        const children = [];
-        for (let child of leaf.children) {
-            if (child.isLeaf && (all || child.style.display !== 'none')) {
-                children.push(child);
-            }
-        }
-        return children;
-    }
-
-    _hideIcon(leaf) {
-        if (leaf.isLeaf) {
-            leaf.icon.classList.add('hidden');
-        }
-    }
-
-    _showIcon(leaf) {
-        if (leaf.isLeaf) {
-            leaf.icon.classList.remove('hidden');
-        }
-    }
-
     expandAll() {
         this._expandChildren(this.element);
     }
@@ -852,9 +1093,10 @@ export class Tree extends Events {
         const scroll = this.element.scrollTop;
         utils.removeChildren(this.element);
         for (let leaf of this.element.data.task) {
-            const add = this._leaf(leaf, 0);
+            const add = new Leaf(leaf, 0, this);
             add.data.parent = this.element.data;
-            this.element.appendChild(add);
+            add.element.__leafInstance = add;
+            this.element.appendChild(add.element);
         }
         this.element.scrollTop = scroll + 'px';
     }
@@ -863,8 +1105,8 @@ export class Tree extends Events {
         const children = this._getChildren(null, true);
         for (let child of children) {
             if (child.data === data) {
-                child.name.setAttribute('contenteditable', true);
-                child.name.focus();
+                child.querySelector(`.${this.prefixClassName}-name`).setAttribute('contenteditable', true);
+                child.querySelector(`.${this.prefixClassName}-name`).focus();
             }
         }
     }
@@ -907,102 +1149,15 @@ export class Tree extends Events {
         return element;
     }
 
-    _handleTagActionSuggestions(e, leaf) {
-        const input = e.target;
-        const value = input.innerText;
-        const cursorPosition = window.getSelection().getRangeAt(0).startOffset;
-
-        const lastSymbolIndex = this._findLastSymbol(value, cursorPosition);
-        if (lastSymbolIndex === -1) return;
-
-        const currentWord = value.substring(lastSymbolIndex, cursorPosition);
-        const suggestions = this._getSuggestions(currentWord);
-
-        this._showSuggestions(suggestions, input, cursorPosition);
-    }
-
-    _findLastSymbol(value, cursorPosition) {
-        const symbols = Object.values(this._options.symbols);
-        for (let i = cursorPosition - 1; i >= 0; i--) {
-            if (symbols.includes(value.charAt(i))) {
-                return i;
+    _getChildren(leaf, all) {
+        leaf = leaf || this.element;
+        const children = [];
+        for (let child of leaf.children) {
+            if (child.isLeaf && (all || child.style.display !== 'none')) {
+                children.push(child);
             }
         }
-        return -1;
-    }
-
-    _getSuggestions(currentWord) {
-        const symbol = currentWord.charAt(0);
-        const wordPart = currentWord.substring(1).toLowerCase();
-
-        if (symbol === this._options.symbols.tags) {
-            return Object.keys(window.suggestions.tags).filter(tag => tag.startsWith(wordPart)).flatMap(tag => window.suggestions.tags[tag]);
-        } else if (symbol === this._options.symbols.actions) {
-            return Object.keys(window.suggestions.actions).filter(action => action.startsWith(wordPart)).flatMap(action => window.suggestions.actions[action]);
-        } else if (symbol === this._options.symbols.oracles) {
-            return Object.keys(window.suggestions.oracles).filter(oracle => oracle.startsWith(wordPart)).flatMap(oracle => window.suggestions.oracles[oracle]);
-        }
-
-        return [];
-    }
-
-    _showSuggestions(suggestions, target, cursorPosition) {
-        let suggestionsList = document.getElementById('suggestions-list');
-        if (!suggestionsList) {
-            suggestionsList = document.createElement('ul');
-            suggestionsList.id = 'suggestions-list';
-            suggestionsList.style.position = 'absolute';
-            document.body.appendChild(suggestionsList);
-        }
-
-        suggestionsList.innerHTML = '';
-        suggestionsList.style.left = `${target.getBoundingClientRect().left}px`;
-        suggestionsList.style.top = `${target.getBoundingClientRect().bottom}px`;
-
-        suggestions.forEach(suggestion => {
-            const suggestionItem = document.createElement('li');
-            suggestionItem.innerText = suggestion;
-            suggestionItem.addEventListener('mousedown', (e) => {
-                e.preventDefault();
-                this._insertSuggestion(target, suggestion, cursorPosition);
-                suggestionsList.innerHTML = '';
-            });
-            suggestionsList.appendChild(suggestionItem);
-        });
-    }
-
-    _insertSuggestion(target, suggestion, cursorPosition) {
-        const value = target.innerText;
-        const symbol = value.charAt(cursorPosition - 1);
-        const before = value.substring(0, cursorPosition - 1);
-        const after = value.substring(cursorPosition);
-
-        const span = document.createElement('span');
-        span.className = 'suggestion-span';
-        span.contentEditable = 'false';
-        span.innerHTML = `${symbol}${suggestion} <span class="remove-suggestion">x</span>`;
-        span.querySelector('.remove-suggestion').addEventListener('click', () => {
-            span.remove();
-        });
-
-        const range = window.getSelection().getRangeAt(0);
-        range.deleteContents();
-        range.insertNode(span);
-``
-        const space = document.createTextNode(' ');
-        range.insertNode(space);
-        range.setStartAfter(space);
-        range.setEndAfter(space);
-        window.getSelection().removeAllRanges();
-        window.getSelection().addRange(range);
-
-        const event = new Event('input', {
-            bubbles: true,
-            cancelable: true,
-        });
-        target.dispatchEvent(event);
-
-        target.focus();
+        return children;
     }
 }
 
@@ -1165,7 +1320,7 @@ export function html(options) {
         options.parent.appendChild(object);
     }
     if (options.className) {
-        object.classList.add(options.className);
+        options.className.split(' ').forEach(cls => object.classList.add(cls));
     }
     if (options.html) {
         object.innerHTML = options.html;
@@ -1180,6 +1335,7 @@ export function html(options) {
     }
     return object;
 }
+
 
 export function getChildIndex(parent, child) {
     let index = 0

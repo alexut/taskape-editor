@@ -58,6 +58,9 @@
     cursor: grab;
     /* Add any additional styling needed */
     border:1px solid red;
+    width:10px;
+    height: 10px;
+    display: block;
 }
 
 .suggestion-span {

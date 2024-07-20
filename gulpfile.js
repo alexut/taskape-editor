@@ -6,6 +6,12 @@ const rename = require('gulp-rename');
 const file = require('gulp-file');
 const fs = require('fs');
 const path = require('path');
+const esbuild = require('esbuild');
+const { exec } = require('child_process');
+const postcss = require('gulp-postcss');
+const tailwindcss = require('tailwindcss');
+const autoprefixer = require('autoprefixer');
+
 
 // Mermaid script to be injected
 const mermaidScript = `
@@ -42,21 +48,43 @@ const mermaidScript = `
 // JSDoc configuration
 const jsdocConfig = require('./jsdoc.json');
 
+// Custom clean function
+function clean(filePaths, cb) {
+  filePaths.forEach(filePath => {
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      console.log(`Deleted file: ${filePath}`);
+    }
+  });
+  if (cb) cb();
+}
+
+// Task to build JavaScript with esbuild
+gulp.task('scripts', gulp.series(done => {
+  clean(['./index.js', './index.min.js'], done);
+}, () => {
+  return esbuild.build({
+    entryPoints: ['./src/init.js'],
+    bundle: true,
+    outfile: 'index.js',
+    minify: false,
+    sourcemap: true,
+  }).then(() => {
+    return gulp.src('./index.js')
+      .pipe(rename('index.min.js'))
+      .pipe(uglify())
+      .pipe(gulp.dest('./'));
+  }).catch((err) => {
+    console.error('Error during build:', err);
+  });
+}));
+
 // Task to generate JavaScript documentation
 gulp.task('docs', (cb) => {
   gulp.src(['README.md'], { read: false }) // Only include README.md here to avoid redundancy
     .pipe(jsdoc(jsdocConfig, cb));
 });
 
-// Task to concatenate JavaScript files
-gulp.task('scripts', () => {
-  return gulp.src('./src/**/*.js')
-    .pipe(concat('index.js'))
-    .pipe(gulp.dest('./'))
-    .pipe(rename('index.min.js'))
-    .pipe(uglify())
-    .pipe(gulp.dest('./'));
-});
 
 // Task to inject Mermaid script into index.html
 gulp.task('inject-mermaid-script', (cb) => {
@@ -69,21 +97,6 @@ gulp.task('inject-mermaid-script', (cb) => {
   }
   cb();
 });
-
-
-// ** GPT CONCATENATION FEATURE **
-
-// Configuration for source directories and files, and their respective output files
-// MODEL FOR CONFIGURATION:
-// const gpt_config = [
-//   { src: ['src', 'anotherSrc/file1.js', 'anotherSrc/file2.js'], exclude: ['src/exclude-folder'], output: 'src' },
-//   { src: ['scss', 'scss/style1.scss', 'scss/style2.scss'], output: 'scss' } // No exclude provided
-// ];
-
-
-const gpt_config = [
-    { src: ['readme.md','index.html','src'], output: 'src' }
-];
 
 // Function to create the desired output format
 function formatFileContent(filePath) {
@@ -113,6 +126,45 @@ function getAllFiles(dirPath, arrayOfFiles, excludeDirs = []) {
   return arrayOfFiles;
 }
 
+// SASS
+
+
+// Function to compile SCSS using Dart Sass
+function compileSass(src, dest, key) {
+  return new Promise((resolve, reject) => {
+    const destFile = path.join(dest, `${key}.css`);
+    const nodeModulesPath = path.resolve(__dirname, 'node_modules');
+    exec(`sass --load-path=${nodeModulesPath} ${src}:${destFile}`, (err, stdout, stderr) => {
+      console.log(stdout);
+      if (err) {
+        console.error(stderr);
+        reject(err);
+      } else {
+        resolve(destFile);
+      }
+    });
+  });
+}
+
+// Task to process compiled CSS with Tailwind and Autoprefixer
+gulp.task('process-css', () => {
+  return gulp.src('main.css')
+    .pipe(postcss([
+      tailwindcss,
+      autoprefixer,
+    ]))
+    .pipe(gulp.dest('./')); // Specify the root directory as the destination
+});
+
+// Main CSS task
+gulp.task('css', (done) => {
+  const srcFile = 'styles/main.scss';
+  const destDir = '.';
+  compileSass(srcFile, destDir, 'main')
+    .then(() => gulp.series('process-css')(done))
+    .catch(done);
+});
+
 // Function to create a Gulp task for concatenating files from source directories and individual files
 function createConcatTask(srcPaths, outputFile, excludeDirs = []) {
   return function () {
@@ -139,14 +191,15 @@ function createConcatTask(srcPaths, outputFile, excludeDirs = []) {
   };
 }
 
+// Configuration for source directories and files, and their respective output files
+const gpt_config = [
+  { src: ['readme.md', 'index.html', 'src'], output: 'src' }
+];
+
 // Create Gulp tasks based on configuration
 gpt_config.forEach(({ src, output, exclude = [] }) => { // Default exclude to an empty array if not provided
   gulp.task(`concat-${output}`, createConcatTask(src, output, exclude));
 });
 
-
-// ** END OF GPT CONCATENATION FEATURE **
-
-
 // Default task to run both scripts and docs tasks
-gulp.task('default', gulp.series('scripts', 'docs', 'inject-mermaid-script', ...gpt_config.map(({ output }) => `concat-${output}`)));
+gulp.task('default', gulp.series('scripts', 'docs', 'inject-mermaid-script', 'css', ...gpt_config.map(({ output }) => `concat-${output}`)));

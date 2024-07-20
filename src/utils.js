@@ -155,7 +155,7 @@ export function html(options) {
         options.parent.appendChild(object);
     }
     if (options.className) {
-        object.classList.add(options.className);
+        options.className.split(' ').forEach(cls => object.classList.add(cls));
     }
     if (options.html) {
         object.innerHTML = options.html;
@@ -170,6 +170,7 @@ export function html(options) {
     }
     return object;
 }
+
 
 export function getChildIndex(parent, child) {
     let index = 0

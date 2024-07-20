@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Task Editor</title>
-    <link rel="stylesheet" href="index.css">
-    <script src="index.js" type="module"></script>
+    <link rel="stylesheet" href="main.css">
     <script>
         window.suggestions = {
             tags: {
@@ -21,10 +20,43 @@
                 example: ['oracle1', 'oracle2', '?oracle']
             }
         };
+
+        window.tasks = {
+            task: [
+                { 
+                    name: 'Do the laundry',
+                    task: [
+                        { name: 'Get the detergent', task: [] },
+                        { name: 'Sort the clothes', task: [] },
+                        { name: 'Put the clothes in the washing machine', task: [] },
+                        { name: 'Turn on the washing machine', task: [] }
+                    ] 
+                },
+                { 
+                    name: 'Do the dishes',
+                    task: [
+                        { name: 'Scrape the dishes', task: [] },
+                        { name: 'Rinse the dishes', task: [] },
+                        { name: 'Put the dishes in the dishwasher', task: [] },
+                        { name: 'Turn on the dishwasher', task: [] }
+                    ]
+                }
+            ]
+        };
     </script>
 </head>
-<body>
-    <div class="title">Taskape Task Editor</div>
-    <div id="tree"></div>
+<body class="bg-gray-100">
+    <div class="title text-3xl font-bold text-center py-4">Taskape Task Editor</div>
+    <div id="tasktree" class="p-4"></div>
+    <div id="taskeditor" class="bg-white shadow-md rounded-lg p-4 m-4">
+        <div id="taskarea" class="border p-2 rounded" contenteditable data-placeholder="Add your task here">
+            Add your task here
+        </div>
+        <div class="taskoptions mt-4">
+            <button id="createTaskBtn" class="bg-blue-500 text-white py-2 px-4 rounded">Add</button>
+            <button class="hidden bg-green-500 text-white py-2 px-4 rounded" id="editTaskBtn">Edit</button> 
+        </div>
+    </div>
+    <script src="index.js"></script>
 </body>
 </html>
