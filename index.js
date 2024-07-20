@@ -25,9 +25,9 @@
     mod
   ));
 
-  // ../../node_modules/eventemitter3/index.js
+  // node_modules/eventemitter3/index.js
   var require_eventemitter3 = __commonJS({
-    "../../node_modules/eventemitter3/index.js"(exports, module) {
+    "node_modules/eventemitter3/index.js"(exports, module) {
       "use strict";
       var has = Object.prototype.hasOwnProperty;
       var prefix = "~";
@@ -382,7 +382,12 @@
       this._target.style.top = pos.y + "px";
       this._target.style.opacity = this._tree.dragOpacity;
       if (this._tree._getChildren(parent, true).length === 0) {
-        parent.hideIcon();
+        const leafInstance = parent.__leafInstance;
+        if (leafInstance) {
+          leafInstance.hideIcon();
+        } else {
+          console.error("Leaf instance not found for parent element");
+        }
       }
     }
     _findClosest(e, entry) {
@@ -693,17 +698,15 @@
       this.element.handler.addEventListener("touchstart", (e) => tree._input._down(e));
       this.element.name.addEventListener("mousedown", (e) => {
         tree._input._down(e);
-        this.selectLeaf();
-      });
-      this.element.name.addEventListener("touchstart", (e) => {
-        tree._input._down(e);
-        this.selectLeaf();
+        this.selectModeLeaf();
+        console.log("mousedown");
       });
       clicked_default(this.element.name, () => {
       }, {
         doubleClickCallback: () => {
           if (tree.taskEditor && typeof tree.taskEditor.editTask === "function") {
             tree.taskEditor.editTask(this);
+            this.editModeLeaf();
           } else {
             console.error("editTask method not found in taskEditor");
           }
@@ -743,12 +746,30 @@
         this.element.icon.classList.remove("hidden");
       }
     }
-    selectLeaf() {
+    selectModeLeaf() {
       const selectedLeaf = document.querySelector(`.${this.tree.prefixClassName}-leaf-select`);
       if (selectedLeaf) {
         selectedLeaf.classList.remove(`${this.tree.prefixClassName}-leaf-select`);
       }
+      const taskEditorArea = document.querySelector("#taskeditor");
+      if (taskEditorArea.classList.contains(`${this.tree.prefixClassName}-edit-mode`)) {
+        taskEditorArea.classList.remove(`${this.tree.prefixClassName}-edit-mode`);
+        taskEditorArea.classList.add(`${this.tree.prefixClassName}-select-mode`);
+        this.tree.taskEditor.resetTaskArea();
+      }
       this.element.classList.add(`${this.tree.prefixClassName}-leaf-select`);
+    }
+    editModeLeaf() {
+      const editedLeaf = document.querySelector(`.${this.tree.prefixClassName}-leaf-edit`);
+      if (editedLeaf) {
+        editedLeaf.classList.remove(`${this.tree.prefixClassName}-leaf-edit`);
+      }
+      const taskEditorArea = document.querySelector("#taskeditor");
+      if (taskEditorArea.classList.contains(`${this.tree.prefixClassName}-select-mode`)) {
+        taskEditorArea.classList.remove(`${this.tree.prefixClassName}-select-mode`);
+        taskEditorArea.classList.add(`${this.tree.prefixClassName}-edit-mode`);
+      }
+      this.element.classList.add(`${this.tree.prefixClassName}-leaf-edit`);
     }
   };
 
@@ -814,34 +835,29 @@
     }
     updateTask() {
       if (this.currentTask) {
-        this.currentTask.data.name = this.taskArea.innerText.trim();
+        this.currentTask.data.name = this.taskArea.innerText.replace(/\s+$/, "");
         this.tree.update();
         this.resetTaskArea();
       }
     }
     onTaskAreaInput() {
       const taskName = this.taskArea.innerText.trim();
-      if (this.currentTask && taskName && taskName !== this.placeholderText) {
-        this.editTaskBtn.classList.remove("hidden");
-        this.createTaskBtn.classList.add("hidden");
-      } else {
-        this.editTaskBtn.classList.add("hidden");
-        this.createTaskBtn.classList.remove("hidden");
-      }
     }
     resetTaskArea() {
       this.taskArea.innerText = "";
       this.taskArea.blur();
-      this.editTaskBtn.classList.add("hidden");
-      this.createTaskBtn.classList.remove("hidden");
       this.currentTask = null;
     }
     editTask(leaf) {
       this.currentTask = leaf;
-      this.taskArea.innerText = leaf.data.name;
-      this.editTaskBtn.classList.remove("hidden");
-      this.createTaskBtn.classList.add("hidden");
+      this.taskArea.innerHTML = leaf.data.name + "&nbsp;";
       this.taskArea.focus();
+      const range = document.createRange();
+      const selection = window.getSelection();
+      range.selectNodeContents(this.taskArea);
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
     }
   };
 
@@ -986,29 +1002,29 @@
       }
       this.element.scrollTop = scroll + "px";
     }
-    editData(data) {
-      const children = this._getChildren(null, true);
-      for (let child of children) {
-        if (child.data === data) {
-          child.querySelector(`.${this.prefixClassName}-name`).setAttribute("contenteditable", true);
-          child.querySelector(`.${this.prefixClassName}-name`).focus();
-        }
-      }
-    }
-    getLeaf(leaf, root = this.element) {
-      this.findInTree(root, (data) => data === leaf);
-    }
-    findInTree(leaf, callback) {
-      for (const child of leaf.children) {
-        if (callback(child)) {
-          return child;
-        }
-        const find = this.findInTree(child, callback);
-        if (find) {
-          return find;
-        }
-      }
-    }
+    // editData(data) {
+    //     const children = this._getChildren(null, true);
+    //     for (let child of children) {
+    //         if (child.data === data) {
+    //             child.querySelector(`.${this.prefixClassName}-name`).setAttribute('contenteditable', true);
+    //             child.querySelector(`.${this.prefixClassName}-name`).focus();
+    //         }
+    //     }
+    // }
+    // getLeaf(leaf, root = this.element) {
+    //     this.findInTree(root, data => data === leaf);
+    // }
+    // findInTree(leaf, callback) {
+    //     for (const child of leaf.children) {
+    //         if (callback(child)) {
+    //             return child;
+    //         }
+    //         const find = this.findInTree(child, callback);
+    //         if (find) {
+    //             return find;
+    //         }
+    //     }
+    // }
     _getFirstChild(element, all) {
       const children = this._getChildren(element, all);
       if (children.length) {

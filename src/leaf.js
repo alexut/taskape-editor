@@ -9,6 +9,7 @@ export class Leaf {
         this.tree = tree;
         this.level = level;
         this.element = utils.html({ className: `${tree.prefixClassName}-leaf` });
+
         this.element.isLeaf = true;
         this.element.__leafInstance = this;
         this.element.data = data;
@@ -29,18 +30,17 @@ export class Leaf {
         // Handle selection on the leaf
         this.element.name.addEventListener('mousedown', e => {
             tree._input._down(e);
-            this.selectLeaf();
+            this.selectModeLeaf();
+      
+            console.log('mousedown');
         });
-        this.element.name.addEventListener('touchstart', e => {
-            tree._input._down(e);
-            this.selectLeaf();
-        });
-
+    
         // Use clicked to handle single-click for selection and double-click for updating task area
         clicked(this.element.name, () => {}, {
             doubleClickCallback: () => {
                 if (tree.taskEditor && typeof tree.taskEditor.editTask === 'function') {
                     tree.taskEditor.editTask(this);
+                    this.editModeLeaf();
                 } else {
                     console.error('editTask method not found in taskEditor');
                 }
@@ -86,11 +86,36 @@ export class Leaf {
         }
     }
 
-    selectLeaf() {
+    selectModeLeaf() {
         const selectedLeaf = document.querySelector(`.${this.tree.prefixClassName}-leaf-select`);
         if (selectedLeaf) {
             selectedLeaf.classList.remove(`${this.tree.prefixClassName}-leaf-select`);
         }
+        const taskEditorArea = document.querySelector('#taskeditor');
+
+        if (taskEditorArea.classList.contains(`${this.tree.prefixClassName}-edit-mode`)) {
+            taskEditorArea.classList.remove(`${this.tree.prefixClassName}-edit-mode`);
+            taskEditorArea.classList.add(`${this.tree.prefixClassName}-select-mode`);
+            this.tree.taskEditor.resetTaskArea();
+        }
+
         this.element.classList.add(`${this.tree.prefixClassName}-leaf-select`);
+
+      
+    }
+
+    editModeLeaf() {
+        const editedLeaf = document.querySelector(`.${this.tree.prefixClassName}-leaf-edit`);
+        if (editedLeaf) {
+            editedLeaf.classList.remove(`${this.tree.prefixClassName}-leaf-edit`);
+        }
+        const taskEditorArea = document.querySelector('#taskeditor');
+
+        if (taskEditorArea.classList.contains(`${this.tree.prefixClassName}-select-mode`)) {
+            taskEditorArea.classList.remove(`${this.tree.prefixClassName}-select-mode`);
+            taskEditorArea.classList.add(`${this.tree.prefixClassName}-edit-mode`);
+        }
+    
+        this.element.classList.add(`${this.tree.prefixClassName}-leaf-edit`);
     }
 }

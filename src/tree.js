@@ -163,31 +163,31 @@ export class Tree extends Events {
         this.element.scrollTop = scroll + 'px';
     }
 
-    editData(data) {
-        const children = this._getChildren(null, true);
-        for (let child of children) {
-            if (child.data === data) {
-                child.querySelector(`.${this.prefixClassName}-name`).setAttribute('contenteditable', true);
-                child.querySelector(`.${this.prefixClassName}-name`).focus();
-            }
-        }
-    }
+    // editData(data) {
+    //     const children = this._getChildren(null, true);
+    //     for (let child of children) {
+    //         if (child.data === data) {
+    //             child.querySelector(`.${this.prefixClassName}-name`).setAttribute('contenteditable', true);
+    //             child.querySelector(`.${this.prefixClassName}-name`).focus();
+    //         }
+    //     }
+    // }
 
-    getLeaf(leaf, root = this.element) {
-        this.findInTree(root, data => data === leaf);
-    }
+    // getLeaf(leaf, root = this.element) {
+    //     this.findInTree(root, data => data === leaf);
+    // }
 
-    findInTree(leaf, callback) {
-        for (const child of leaf.children) {
-            if (callback(child)) {
-                return child;
-            }
-            const find = this.findInTree(child, callback);
-            if (find) {
-                return find;
-            }
-        }
-    }
+    // findInTree(leaf, callback) {
+    //     for (const child of leaf.children) {
+    //         if (callback(child)) {
+    //             return child;
+    //         }
+    //         const find = this.findInTree(child, callback);
+    //         if (find) {
+    //             return find;
+    //         }
+    //     }
+    // }
 
     _getFirstChild(element, all) {
         const children = this._getChildren(element, all);

@@ -2,21 +2,27 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
-$font-stack: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+$font-stack: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 $font-size: 1.25em;
 $task-bg-color: rgb(230, 230, 230);
 $indicator-bg-color: rgb(150, 150, 255);
 $selected-bg-color: rgb(200, 200, 200);
-$leaf-handler-border-color: red;
-
+$leaf-handler-dot-size:2px;
+$leaf-handler-dot-space:6px;
+$leaf-handler-dot-bg: black;
+$leaf-handler-dot-color: white;
 .font {
     font-family: $font-stack;
     font-size: $font-size;
 }
 
+.mb-task {
+    max-width: 640px;
+    width: 100%;
+}
 .mb-task-leaf {
     /* Styles for leaf elements */
-    font-size: 1.25rem;
+    font-size: 1rem;
     font-family: $font-stack;
 }
 
@@ -46,13 +52,15 @@ $leaf-handler-border-color: red;
 }
 
 .mb-task-name {
+    width:100%;
     /* Styles for name elements */
-    padding: 0.5em 1em;
+    padding: 0.7rem 1.2rem;
     margin: 0.1em;
     background: $task-bg-color;
+    border-radius: 4px;
     user-select: none;
     cursor: pointer;
-    width: 200px;
+
 }
 
 .mb-task-indicator {
@@ -67,13 +75,22 @@ $leaf-handler-border-color: red;
     /* Styles for selected elements */
     background: $selected-bg-color;
 }
-
+.mb-task-leaf-edit .mb-task-select {
+    /* Styles for edit elements */
+    background: $indicator-bg-color;
+}
 .mb-task-leaf-handler {
     cursor: grab;
-    border: 1px solid $leaf-handler-border-color;
-    width: 10px;
-    height: 10px;
+    opacity: 0.5;
+    width: 22px;
+    height: 22px;
+    background-color: #ccc;
     display: block;
+    background:
+        linear-gradient(90deg, $leaf-handler-dot-color calc(#{$leaf-handler-dot-space} - #{$leaf-handler-dot-size}), transparent 1%) center / #{$leaf-handler-dot-space} #{$leaf-handler-dot-space},
+        linear-gradient($leaf-handler-dot-color calc(#{$leaf-handler-dot-space} - #{$leaf-handler-dot-size}), transparent 1%) center / #{$leaf-handler-dot-space} #{$leaf-handler-dot-space},
+        $leaf-handler-dot-bg;
+    background-position: 0 0, 50% 0;
 }
 
 .suggestion-span {
@@ -87,5 +104,26 @@ $leaf-handler-border-color: red;
     .remove-suggestion {
         margin-left: 5px;
         cursor: pointer;
+    }
+}
+#taskarea {
+//    focus 
+&:focus {
+    outline: none;
+    border:1px solid $indicator-bg-color;
+}
+
+}
+#taskeditor {
+    max-width: 640px;
+    &.mb-task-select-mode {
+        #editTaskBtn {
+            display: none;
+        }
+    }
+    &.mb-task-edit-mode {
+        #createTaskBtn {
+            display: none;
+        }
     }
 }

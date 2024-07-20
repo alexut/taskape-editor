@@ -543,12 +543,13 @@ video {
   --tw-bg-opacity: 1;
   background-color: rgb(34 197 94 / var(--tw-bg-opacity));
 }
+.bg-slate-300 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(203 213 225 / var(--tw-bg-opacity));
+}
 .bg-white {
   --tw-bg-opacity: 1;
   background-color: rgb(255 255 255 / var(--tw-bg-opacity));
-}
-.p-2 {
-  padding: 0.5rem;
 }
 .p-4 {
   padding: 1rem;
@@ -584,19 +585,27 @@ video {
   --tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 }
+.outline {
+  outline-style: solid;
+}
 .blur {
   --tw-blur: blur(8px);
   filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
 }
 .font {
-  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 1.25em;
+}
+
+.mb-task {
+  max-width: 640px;
+  width: 100%;
 }
 
 .mb-task-leaf {
   /* Styles for leaf elements */
-  font-size: 1.25rem;
-  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+  font-size: 1rem;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .mb-task-content {
@@ -622,15 +631,16 @@ video {
 }
 
 .mb-task-name {
+  width: 100%;
   /* Styles for name elements */
-  padding: 0.5em 1em;
+  padding: 0.7rem 1.2rem;
   margin: 0.1em;
   background: rgb(230, 230, 230);
+  border-radius: 4px;
   -webkit-user-select: none;
      -moz-user-select: none;
           user-select: none;
   cursor: pointer;
-  width: 200px;
 }
 
 .mb-task-indicator {
@@ -646,12 +656,20 @@ video {
   background: rgb(200, 200, 200);
 }
 
+.mb-task-leaf-edit .mb-task-select {
+  /* Styles for edit elements */
+  background: rgb(150, 150, 255);
+}
+
 .mb-task-leaf-handler {
   cursor: grab;
-  border: 1px solid red;
-  width: 10px;
-  height: 10px;
+  opacity: 0.5;
+  width: 22px;
+  height: 22px;
+  background-color: #ccc;
   display: block;
+  background: linear-gradient(90deg, white calc(6px - 2px), transparent 1%) center/6px 6px, linear-gradient(white calc(6px - 2px), transparent 1%) center/6px 6px, black;
+  background-position: 0 0, 50% 0;
 }
 
 .suggestion-span {
@@ -665,4 +683,19 @@ video {
 .suggestion-span .remove-suggestion {
   margin-left: 5px;
   cursor: pointer;
+}
+
+#taskarea:focus {
+  outline: none;
+  border: 1px solid rgb(150, 150, 255);
+}
+
+#taskeditor {
+  max-width: 640px;
+}
+#taskeditor.mb-task-select-mode #editTaskBtn {
+  display: none;
+}
+#taskeditor.mb-task-edit-mode #createTaskBtn {
+  display: none;
 }

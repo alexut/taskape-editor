@@ -12,6 +12,7 @@
   "license": "ISC",
   "devDependencies": {
     "autoprefixer": "^10.4.19",
+    "browser-sync": "^3.0.2",
     "comment-parser": "^1.4.1",
     "del": "^7.1.0",
     "docdash": "^2.0.2",

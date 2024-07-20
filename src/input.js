@@ -95,8 +95,13 @@ export class Input {
         this._target.style.top = pos.y + 'px';
         this._target.style.opacity = this._tree.dragOpacity;
         if (this._tree._getChildren(parent, true).length === 0) {
-            parent.hideIcon();
-        }
+            const leafInstance = parent.__leafInstance; // Get the Leaf instance
+            if (leafInstance) {
+              leafInstance.hideIcon(); // Call hideIcon on the Leaf instance
+            } else {
+              console.error('Leaf instance not found for parent element'); 
+            }
+          }
     }
 
     _findClosest(e, entry) {

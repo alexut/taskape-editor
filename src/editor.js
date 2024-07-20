@@ -1,3 +1,5 @@
+// src/editor.js
+
 'use strict';
 
 import * as utils from './utils';
@@ -73,7 +75,7 @@ export class TaskEditor {
 
     updateTask() {
         if (this.currentTask) {
-            this.currentTask.data.name = this.taskArea.innerText.trim();
+            this.currentTask.data.name = this.taskArea.innerText.replace(/\s+$/, ''); // Trim trailing spaces
             this.tree.update();
             this.resetTaskArea();
         }
@@ -81,28 +83,26 @@ export class TaskEditor {
 
     onTaskAreaInput() {
         const taskName = this.taskArea.innerText.trim();
-        if (this.currentTask && taskName && taskName !== this.placeholderText) {
-            this.editTaskBtn.classList.remove('hidden');
-            this.createTaskBtn.classList.add('hidden');
-        } else {
-            this.editTaskBtn.classList.add('hidden');
-            this.createTaskBtn.classList.remove('hidden');
-        }
     }
 
     resetTaskArea() {
         this.taskArea.innerText = '';
         this.taskArea.blur(); // Triggers the placeholder to be set
-        this.editTaskBtn.classList.add('hidden');
-        this.createTaskBtn.classList.remove('hidden');
         this.currentTask = null;
     }
 
     editTask(leaf) {
         this.currentTask = leaf;
-        this.taskArea.innerText = leaf.data.name;
-        this.editTaskBtn.classList.remove('hidden');
-        this.createTaskBtn.classList.add('hidden');
+        this.taskArea.innerHTML = leaf.data.name + '&nbsp;'; // Add a non-breaking space at the end
         this.taskArea.focus();
+    
+        // Move the cursor to the end of the text
+        const range = document.createRange();
+        const selection = window.getSelection();
+        range.selectNodeContents(this.taskArea);
+        range.collapse(false); // Collapse the range to the end of the text
+        selection.removeAllRanges();
+        selection.addRange(range);
     }
+    
 }

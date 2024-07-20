@@ -11,7 +11,7 @@ const { exec } = require('child_process');
 const postcss = require('gulp-postcss');
 const tailwindcss = require('tailwindcss');
 const autoprefixer = require('autoprefixer');
-
+const browserSync = require('browser-sync').create();
 
 // Mermaid script to be injected
 const mermaidScript = `
@@ -73,7 +73,8 @@ gulp.task('scripts', gulp.series(done => {
     return gulp.src('./index.js')
       .pipe(rename('index.min.js'))
       .pipe(uglify())
-      .pipe(gulp.dest('./'));
+      .pipe(gulp.dest('./'))
+      .pipe(browserSync.stream()); // Stream changes to BrowserSync
   }).catch((err) => {
     console.error('Error during build:', err);
   });
@@ -84,7 +85,6 @@ gulp.task('docs', (cb) => {
   gulp.src(['README.md'], { read: false }) // Only include README.md here to avoid redundancy
     .pipe(jsdoc(jsdocConfig, cb));
 });
-
 
 // Task to inject Mermaid script into index.html
 gulp.task('inject-mermaid-script', (cb) => {
@@ -128,7 +128,6 @@ function getAllFiles(dirPath, arrayOfFiles, excludeDirs = []) {
 
 // SASS
 
-
 // Function to compile SCSS using Dart Sass
 function compileSass(src, dest, key) {
   return new Promise((resolve, reject) => {
@@ -153,7 +152,8 @@ gulp.task('process-css', () => {
       tailwindcss,
       autoprefixer,
     ]))
-    .pipe(gulp.dest('./')); // Specify the root directory as the destination
+    .pipe(gulp.dest('./'))
+    .pipe(browserSync.stream()); // Stream changes to BrowserSync
 });
 
 // Main CSS task
@@ -191,6 +191,19 @@ function createConcatTask(srcPaths, outputFile, excludeDirs = []) {
   };
 }
 
+// BrowserSync serve task
+gulp.task('serve', () => {
+  browserSync.init({
+    server: {
+      baseDir: './'
+    }
+  });
+
+  gulp.watch('styles/**/*.scss', gulp.series('css')); // Watch SCSS files
+  gulp.watch('*.html').on('change', browserSync.reload); // Watch HTML files
+  gulp.watch('src/**/*.js', gulp.series('scripts')).on('change', browserSync.reload); // Watch JS files and run scripts task
+});
+
 // Configuration for source directories and files, and their respective output files
 const gpt_config = [
   { src: ['readme.md', 'index.html', 'src'], output: 'src' }
@@ -201,5 +214,5 @@ gpt_config.forEach(({ src, output, exclude = [] }) => { // Default exclude to an
   gulp.task(`concat-${output}`, createConcatTask(src, output, exclude));
 });
 
-// Default task to run both scripts and docs tasks
-gulp.task('default', gulp.series('scripts', 'docs', 'inject-mermaid-script', 'css', ...gpt_config.map(({ output }) => `concat-${output}`)));
+// Default task to run scripts, docs, inject-mermaid-script, css, and serve tasks
+gulp.task('default', gulp.series('scripts', 'docs', 'inject-mermaid-script', 'css', 'serve', ...gpt_config.map(({ output }) => `concat-${output}`)));
