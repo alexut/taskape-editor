@@ -60,7 +60,295 @@
 
 
     <section class="readme usertext">
-        <article><h1>Taskape Task Editor</h1>
+        <article><h1>BUG</h1>
+<p>This section outlines the classes and methods involved in the autocomplete feature, emphasizing potential issues with the filter functionality. It includes a Mermaid.js diagram to visualize the interactions.</p>
+<h2>Classes and Methods</h2>
+<h3><code>AutocompleteManager</code></h3>
+<p>The <code>AutocompleteManager</code> class handles the logic for the autocomplete feature, including detecting triggers, filtering elements, and inserting selected values into the task area.</p>
+<h4>Methods</h4>
+<ul>
+<li>
+<p><strong>constructor(popupElement)</strong></p>
+<ul>
+<li>Initializes the <code>AutocompleteManager</code> with a <code>Popup</code> instance.</li>
+<li>Adds event listeners to the <code>taskarea</code> and document for input and keydown events, respectively.</li>
+<li>Returns: <code>void</code></li>
+</ul>
+</li>
+<li>
+<p><strong>handleTaskAreaInput(event)</strong></p>
+<ul>
+<li>Handles input events in the <code>taskarea</code>.</li>
+<li>Detects trigger characters (<code>@</code>, <code>&gt;</code>, <code>#</code>) and initiates the autocomplete process.</li>
+<li>Returns: <code>void</code></li>
+</ul>
+</li>
+<li>
+<p><strong>detectTrigger(char)</strong></p>
+<ul>
+<li>Sets the trigger character and prepares the popup for showing relevant elements.</li>
+<li>Clears and focuses the input field in the popup.</li>
+<li>Returns: <code>void</code></li>
+</ul>
+</li>
+<li>
+<p><strong>showElements(category)</strong></p>
+<ul>
+<li>Retrieves and displays elements based on the trigger character category (<code>tags</code>, <code>actions</code>, <code>oracles</code>).</li>
+<li>Returns: <code>void</code></li>
+</ul>
+</li>
+<li>
+<p><strong>filterElements(text)</strong></p>
+<ul>
+<li>Filters elements based on the input text.</li>
+<li>This method may not filter correctly and can block after writing the first letter due to issues with string conversion or filtering logic.</li>
+<li>Returns: <code>void</code></li>
+</ul>
+</li>
+<li>
+<p><strong>renderElements()</strong></p>
+<ul>
+<li>Renders the filtered elements in the popup.</li>
+<li>Returns: <code>void</code></li>
+</ul>
+</li>
+<li>
+<p><strong>handleKeyDown(event)</strong></p>
+<ul>
+<li>Handles keydown events for navigating and selecting elements within the popup.</li>
+<li>Returns: <code>void</code></li>
+</ul>
+</li>
+<li>
+<p><strong>handlePopupInput(event)</strong></p>
+<ul>
+<li>Handles input events in the popup's input field.</li>
+<li>Filters elements based on the input text.</li>
+<li>Returns: <code>void</code></li>
+</ul>
+</li>
+<li>
+<p><strong>handlePopupClick(event)</strong></p>
+<ul>
+<li>Handles click events in the popup.</li>
+<li>Inserts the selected element or value.</li>
+<li>Returns: <code>void</code></li>
+</ul>
+</li>
+<li>
+<p><strong>insertSelectedElement()</strong></p>
+<ul>
+<li>Inserts the selected element into the <code>taskarea</code>.</li>
+<li>Shows values for the selected element if applicable.</li>
+<li>Returns: <code>void</code></li>
+</ul>
+</li>
+<li>
+<p><strong>showValues(values)</strong></p>
+<ul>
+<li>Displays possible values for the selected element in the popup.</li>
+<li>Returns: <code>void</code></li>
+</ul>
+</li>
+<li>
+<p><strong>insertSelectedValue()</strong></p>
+<ul>
+<li>Inserts the selected value into the <code>taskarea</code> at the correct position.</li>
+<li>Resets the state and focuses back to the <code>taskarea</code>.</li>
+<li>Returns: <code>void</code></li>
+</ul>
+</li>
+<li>
+<p><strong>resetState()</strong></p>
+<ul>
+<li>Resets the state of the <code>AutocompleteManager</code> and hides the popup.</li>
+<li>Returns: <code>void</code></li>
+</ul>
+</li>
+</ul>
+<h3><code>Popup</code></h3>
+<p>The <code>Popup</code> class manages the display and interactions of the autocomplete popup.</p>
+<h4>Methods</h4>
+<ul>
+<li>
+<p><strong>constructor()</strong></p>
+<ul>
+<li>Initializes the <code>Popup</code> and creates the input field.</li>
+<li>Returns: <code>void</code></li>
+</ul>
+</li>
+<li>
+<p><strong>showElements(elements, selectedIndex)</strong></p>
+<ul>
+<li>Displays the given elements in the popup with the selected index highlighted.</li>
+<li>Returns: <code>void</code></li>
+</ul>
+</li>
+<li>
+<p><strong>hide()</strong></p>
+<ul>
+<li>Hides the popup.</li>
+<li>Returns: <code>void</code></li>
+</ul>
+</li>
+<li>
+<p><strong>isVisible()</strong></p>
+<ul>
+<li>Checks if the popup is visible.</li>
+<li>Returns: <code>boolean</code></li>
+</ul>
+</li>
+<li>
+<p><strong>handleInput(event)</strong></p>
+<ul>
+<li>Dispatches an input event with the current value of the popup's input field.</li>
+<li>Returns: <code>void</code></li>
+</ul>
+</li>
+<li>
+<p><strong>placePopup(taskArea)</strong></p>
+<ul>
+<li>Positions the popup relative to the <code>taskarea</code>.</li>
+<li>Returns: <code>void</code></li>
+</ul>
+</li>
+<li>
+<p><strong>createInputField()</strong></p>
+<ul>
+<li>Creates and initializes the input field for the popup.</li>
+<li>Returns: <code>void</code></li>
+</ul>
+</li>
+<li>
+<p><strong>setInputValue(value)</strong></p>
+<ul>
+<li>Sets the value of the popup's input field.</li>
+<li>Returns: <code>void</code></li>
+</ul>
+</li>
+<li>
+<p><strong>getInputValue()</strong></p>
+<ul>
+<li>Gets the value of the popup's input field.</li>
+<li>Returns: <code>string</code></li>
+</ul>
+</li>
+<li>
+<p><strong>clearInputField()</strong></p>
+<ul>
+<li>Clears the value of the popup's input field.</li>
+<li>Returns: <code>void</code></li>
+</ul>
+</li>
+<li>
+<p><strong>clearElements()</strong></p>
+<ul>
+<li>Clears all elements from the popup.</li>
+<li>Returns: <code>void</code></li>
+</ul>
+</li>
+</ul>
+<h2>Potential Issues</h2>
+<h3>Filter Method</h3>
+<ul>
+<li><strong>Issue</strong>: The <code>filterElements</code> method does not filter correctly and may block after writing the first letter.</li>
+<li><strong>Cause</strong>: Potential issues with string conversion or filtering logic.</li>
+<li><strong>Solution</strong>: Ensure text is correctly converted to a string and the filtering logic accurately matches the elements.</li>
+</ul>
+<h2>Mermaid.js Diagram</h2>
+<pre class="prettyprint source lang-mermaid"><code>graph TD
+    taskAreaInput[taskarea input event] --> handleTaskAreaInput{handleTaskAreaInput}
+    handleTaskAreaInput -->|Trigger Detected| detectTrigger[detectTrigger]
+    handleTaskAreaInput -->|No Trigger| Continue[Continue Typing]
+    detectTrigger --> showElements[showElements]
+    showElements --> renderElements[renderElements]
+    renderElements --> showPopup[showPopup]
+    showPopup --> popupInput[Popup input event]
+    popupInput --> handlePopupInput{handlePopupInput}
+    handlePopupInput --> filterElements[filterElements]
+    filterElements --> renderFilteredElements[renderFilteredElements]
+
+    subgraph Popup Class
+        showPopup
+        popupInput
+    end
+
+    subgraph AutocompleteManager Class
+        handleTaskAreaInput
+        detectTrigger
+        showElements
+        renderElements
+        handlePopupInput
+        filterElements
+        renderFilteredElements
+    end
+</code></pre>
+<h1>NEW FEATURE DEVELOPMENT:</h1>
+<h2>Autocompolete manager popup</h2>
+<pre class="prettyprint source lang-mermaid"><code>sequenceDiagram
+    participant User
+    participant TaskEditor
+    participant AutocompleteManager
+    participant Popup
+
+    User->>TaskEditor: Type &quot;@&quot; or click #addTags
+    TaskEditor->>AutocompleteManager: Detect &quot;@&quot; or button click
+    AutocompleteManager->>AutocompleteManager: Fetch tags suggestions from window.suggestions
+    AutocompleteManager->>Popup: Show tags suggestions
+
+    User->>TaskEditor: Type &quot;>&quot; or click #addActions
+    TaskEditor->>AutocompleteManager: Detect &quot;>&quot; or button click
+    AutocompleteManager->>AutocompleteManager: Fetch actions suggestions from window.suggestions
+    AutocompleteManager->>Popup: Show actions suggestions
+
+    User->>TaskEditor: Type &quot;#&quot; or click #addOracles
+    TaskEditor->>AutocompleteManager: Detect &quot;#&quot; or button click
+    AutocompleteManager->>AutocompleteManager: Fetch oracles suggestions from window.suggestions
+    AutocompleteManager->>Popup: Show oracles suggestions
+
+    User->>Popup: Navigate and select suggestion
+    Popup->>AutocompleteManager: Return selected suggestion
+    AutocompleteManager->>AutocompleteManager: Fetch values for selected suggestion
+    AutocompleteManager->>Popup: Show values suggestions
+
+    User->>Popup: Navigate and select value
+    Popup->>AutocompleteManager: Return selected value
+    AutocompleteManager->>TaskEditor: Insert selected value wrapped in span
+</code></pre>
+<p>##Workflow
+###Triggering the Popup:</p>
+<p>When the user types &quot;@&quot; or clicks one of the designated buttons (#addTags, #addActions, #addOracles), the autocomplete popup appears inside the TaskEditor contenteditable area.
+The popup initially shows the main categories (tags, actions, oracles).
+Selecting a Category:</p>
+<p>If the user types a character after &quot;@&quot;, the relevant category is automatically selected.
+For example, typing &quot;@t&quot; will show the &quot;tags&quot; category first.
+If a button is clicked, the popup directly shows the respective category.
+Navigating Suggestions:</p>
+<p>As the user continues typing, the popup updates to show the most relevant suggestions.
+For instance, typing &quot;@e&quot; after selecting the &quot;tags&quot; category will prioritize the &quot;estimate&quot; property.
+Selecting a Property:</p>
+<p>The user can navigate the suggestions using the arrow keys.
+Pressing &quot;Enter&quot; selects the highlighted suggestion.
+Once a property (e.g., estimate) is selected, the popup displays the values related to that property.
+Inserting a Value:</p>
+<p>The user navigates through the values and selects one.
+The selected value is wrapped in a span element with a unique ID and a close button.
+For example, typing &quot;@due(&quot; will automatically display the possible values ['5h', '30min', '2h', '1h', '6h', '?due'].
+Selecting a value inserts it as <span class="mb-prob mb-tag" id="uniqueID">@due5h<span class="close-prop">x</span></span>.
+Removing a Tag:</p>
+<p>The user can remove a tag by clicking the close button (x) on the span element.
+Example Usage
+Typing &quot;@&quot;:
+User types &quot;@&quot; in the TaskEditor.
+The popup shows categories: tags, actions, oracles.
+User types &quot;e&quot;.
+The popup shows properties starting with &quot;e&quot;, e.g., estimate under tags.
+User selects estimate.
+The popup shows values for estimate: ['5h', '30min', '2h', '1h', '6h', '?estimate'].
+User selects 5h.
+The value 5h is inserted into the TaskEditor as <span class="mb-prob mb-tag" id="uniqueID">@estimate5h<span class="close-prop">x</span></span>.</p>
+<h1>Taskape Task Editor</h1>
 <p>A vanilla drag-and-drop UI tree for managing tasks, based on David Figatner's drag-and-drop ui tree</p>
 <h2>Rationale</h2>
 <p>Taskape Task Editor is designed to provide an easy-to-use, drag-and-drop interface for managing hierarchical tasks without the need for frameworks like Vue or React.</p>
@@ -269,7 +557,7 @@ tree.expandAll();
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a> on Sat Jul 20 2024 18:51:55 GMT+0300 (Eastern European Summer Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a> on Sun Jul 21 2024 12:23:29 GMT+0300 (Eastern European Summer Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

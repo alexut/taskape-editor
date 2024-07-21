@@ -1,19 +1,21 @@
 # Taskape Task Editor
-A vanilla drag-and-drop UI tree for managing tasks, based on David Figatner's drag-and-drop ui tree
 
-## Rationale
-Taskape Task Editor is designed to provide an easy-to-use, drag-and-drop interface for managing hierarchical tasks without the need for frameworks like Vue or React.
+A vanilla drag-and-drop UI tree for managing tasks, based on David Figatner's drag-and-drop UI tree.
 
-## Interaction Diagram
+## Autocomplete Manager Popup
+
+### Sequence Diagram
 
 ```mermaid
 sequenceDiagram
     participant User
+    participant TaskEditor
+    participant AutocompleteManager
+    participant Popup
     participant Tree
     participant Input
     participant Clicked
     participant Leaf
-    participant TaskEditor
 
     User->>Leaf: mousedown/touchstart (double-click)
     Leaf->>Clicked: touchstart(e)
@@ -33,7 +35,82 @@ sequenceDiagram
     Tree->>Tree: _createLeaf(data, level) (for each leaf)
     Tree->>Tree: Update DOM structure
     TaskEditor->>TaskEditor: resetTaskArea()
+
+    User->>TaskEditor: Type "@" or click #addTags
+    TaskEditor->>AutocompleteManager: Detect "@" or button click
+    AutocompleteManager->>AutocompleteManager: Fetch tags suggestions from window.suggestions
+    AutocompleteManager->>Popup: Show tags suggestions
+
+    User->>TaskEditor: Type ">" or click #addActions
+    TaskEditor->>AutocompleteManager: Detect ">" or button click
+    AutocompleteManager->>AutocompleteManager: Fetch actions suggestions from window.suggestions
+    AutocompleteManager->>Popup: Show actions suggestions
+
+    User->>TaskEditor: Type "#" or click #addOracles
+    TaskEditor->>AutocompleteManager: Detect "#" or button click
+    AutocompleteManager->>AutocompleteManager: Fetch oracles suggestions from window.suggestions
+    AutocompleteManager->>Popup: Show oracles suggestions
+
+    User->>Popup: Navigate and select suggestion
+    Popup->>AutocompleteManager: Return selected suggestion {key: 'tags', value: 'estimate'}
+    AutocompleteManager->>AutocompleteManager: Fetch values for selected suggestion
+    AutocompleteManager->>Popup: Show values suggestions ['5h', '30min', '2h', '1h', '6h', '?estimate']
+
+    User->>Popup: Navigate and select value
+    Popup->>AutocompleteManager: Return selected value {key: 'estimate', value: '5h'}
+    AutocompleteManager->>TaskEditor: Insert selected value @estimate(5h)
+    AutocompleteManager->>Popup: Close popup
+    Popup->>TaskEditor: Return focus to TaskEditor
 ```
+
+### Workflow
+
+#### Triggering the Popup:
+
+When the user types "@" or clicks one of the designated buttons (`#addTags`, `#addActions`, `#addOracles`), the autocomplete popup appears inside the TaskEditor contenteditable area.
+The popup initially shows the main categories (tags, actions, or oracles).
+
+#### Selecting a Category:
+
+If the user types a character after "@", the relevant category is automatically selected.
+For example, typing "@t" will show the "tags" category first.
+If a button is clicked, the popup directly shows the respective category.
+
+#### Navigating Suggestions:
+
+As the user continues typing, the popup updates to show the most relevant suggestions.
+For instance, typing "@e" after selecting the "tags" category will prioritize the "estimate" property.
+
+#### Selecting a Property:
+
+The user can navigate the suggestions using the arrow keys.
+Pressing "Enter" selects the highlighted suggestion.
+Once a property (e.g., estimate) is selected, the popup displays the values related to that property.
+
+#### Inserting a Value:
+
+The user navigates through the values and selects one.
+The selected value is inserted into the TaskEditor as `@property(value)`.
+
+#### Removing a Tag:
+
+The user can remove a tag by using backspace or delete on the span element.
+
+### Example Usage
+
+Typing "@":
+1. User types "@" in the TaskEditor.
+2. The popup shows categories: tags, actions, oracles.
+3. User types "e".
+4. The popup shows properties starting with "e", e.g., estimate under tags.
+5. User selects estimate.
+6. The popup shows values for estimate: ['5h', '30min', '2h', '1h', '6h', '?estimate'].
+7. User selects 5h.
+8. The value 5h is inserted into the TaskEditor as `@estimate(5h)`.
+
+## Rationale
+
+Taskape Task Editor is designed to provide an easy-to-use, drag-and-drop interface for managing hierarchical tasks without the need for frameworks like Vue or React.
 
 ## UML Class Diagram
 
@@ -155,7 +232,6 @@ classDiagram
   Input --> Indicator
   Clicked --> Input
   Tree --> Utils
-
 ```
 
 ## Super Simple Example
@@ -182,27 +258,4 @@ const tasks = {
         }
     ]
 };
-
-const tree = new Tree(tasks, { parent: document.body, edit: true });
-tree.expandAll();
 ```
-
-## Features
-- Drag-and-drop tasks
-- Indentation for nested tasks
-- Expand/collapse tasks
-- Edit task names
-- Add new tasks
-- Delete tasks
-
-
-## Tasks
-Tasks are represented as a JavaScript object, where each task is an object with a `name` string and a `task` array of subtasks.
-
-
-## License
-Taskape Task Editor is released under the [MIT License](https://opensource.org/licenses/MIT).
-```
-
-## Credits
-- [David Figatner] 

@@ -1,20 +1,22 @@
 readme.md:
 # Taskape Task Editor
-A vanilla drag-and-drop UI tree for managing tasks, based on David Figatner's drag-and-drop ui tree
 
-## Rationale
-Taskape Task Editor is designed to provide an easy-to-use, drag-and-drop interface for managing hierarchical tasks without the need for frameworks like Vue or React.
+A vanilla drag-and-drop UI tree for managing tasks, based on David Figatner's drag-and-drop UI tree.
 
-## Interaction Diagram
+## Autocomplete Manager Popup
+
+### Sequence Diagram
 
 ```mermaid
 sequenceDiagram
     participant User
+    participant TaskEditor
+    participant AutocompleteManager
+    participant Popup
     participant Tree
     participant Input
     participant Clicked
     participant Leaf
-    participant TaskEditor
 
     User->>Leaf: mousedown/touchstart (double-click)
     Leaf->>Clicked: touchstart(e)
@@ -34,7 +36,82 @@ sequenceDiagram
     Tree->>Tree: _createLeaf(data, level) (for each leaf)
     Tree->>Tree: Update DOM structure
     TaskEditor->>TaskEditor: resetTaskArea()
+
+    User->>TaskEditor: Type "@" or click #addTags
+    TaskEditor->>AutocompleteManager: Detect "@" or button click
+    AutocompleteManager->>AutocompleteManager: Fetch tags suggestions from window.suggestions
+    AutocompleteManager->>Popup: Show tags suggestions
+
+    User->>TaskEditor: Type ">" or click #addActions
+    TaskEditor->>AutocompleteManager: Detect ">" or button click
+    AutocompleteManager->>AutocompleteManager: Fetch actions suggestions from window.suggestions
+    AutocompleteManager->>Popup: Show actions suggestions
+
+    User->>TaskEditor: Type "#" or click #addOracles
+    TaskEditor->>AutocompleteManager: Detect "#" or button click
+    AutocompleteManager->>AutocompleteManager: Fetch oracles suggestions from window.suggestions
+    AutocompleteManager->>Popup: Show oracles suggestions
+
+    User->>Popup: Navigate and select suggestion
+    Popup->>AutocompleteManager: Return selected suggestion {key: 'tags', value: 'estimate'}
+    AutocompleteManager->>AutocompleteManager: Fetch values for selected suggestion
+    AutocompleteManager->>Popup: Show values suggestions ['5h', '30min', '2h', '1h', '6h', '?estimate']
+
+    User->>Popup: Navigate and select value
+    Popup->>AutocompleteManager: Return selected value {key: 'estimate', value: '5h'}
+    AutocompleteManager->>TaskEditor: Insert selected value @estimate(5h)
+    AutocompleteManager->>Popup: Close popup
+    Popup->>TaskEditor: Return focus to TaskEditor
 ```
+
+### Workflow
+
+#### Triggering the Popup:
+
+When the user types "@" or clicks one of the designated buttons (`#addTags`, `#addActions`, `#addOracles`), the autocomplete popup appears inside the TaskEditor contenteditable area.
+The popup initially shows the main categories (tags, actions, or oracles).
+
+#### Selecting a Category:
+
+If the user types a character after "@", the relevant category is automatically selected.
+For example, typing "@t" will show the "tags" category first.
+If a button is clicked, the popup directly shows the respective category.
+
+#### Navigating Suggestions:
+
+As the user continues typing, the popup updates to show the most relevant suggestions.
+For instance, typing "@e" after selecting the "tags" category will prioritize the "estimate" property.
+
+#### Selecting a Property:
+
+The user can navigate the suggestions using the arrow keys.
+Pressing "Enter" selects the highlighted suggestion.
+Once a property (e.g., estimate) is selected, the popup displays the values related to that property.
+
+#### Inserting a Value:
+
+The user navigates through the values and selects one.
+The selected value is inserted into the TaskEditor as `@property(value)`.
+
+#### Removing a Tag:
+
+The user can remove a tag by using backspace or delete on the span element.
+
+### Example Usage
+
+Typing "@":
+1. User types "@" in the TaskEditor.
+2. The popup shows categories: tags, actions, oracles.
+3. User types "e".
+4. The popup shows properties starting with "e", e.g., estimate under tags.
+5. User selects estimate.
+6. The popup shows values for estimate: ['5h', '30min', '2h', '1h', '6h', '?estimate'].
+7. User selects 5h.
+8. The value 5h is inserted into the TaskEditor as `@estimate(5h)`.
+
+## Rationale
+
+Taskape Task Editor is designed to provide an easy-to-use, drag-and-drop interface for managing hierarchical tasks without the need for frameworks like Vue or React.
 
 ## UML Class Diagram
 
@@ -156,7 +233,6 @@ classDiagram
   Input --> Indicator
   Clicked --> Input
   Tree --> Utils
-
 ```
 
 ## Super Simple Example
@@ -183,30 +259,8 @@ const tasks = {
         }
     ]
 };
-
-const tree = new Tree(tasks, { parent: document.body, edit: true });
-tree.expandAll();
 ```
 
-## Features
-- Drag-and-drop tasks
-- Indentation for nested tasks
-- Expand/collapse tasks
-- Edit task names
-- Add new tasks
-- Delete tasks
-
-
-## Tasks
-Tasks are represented as a JavaScript object, where each task is an object with a `name` string and a `task` array of subtasks.
-
-
-## License
-Taskape Task Editor is released under the [MIT License](https://opensource.org/licenses/MIT).
-```
-
-## Credits
-- [David Figatner] 
 
 index.html:
 <!DOCTYPE html>
@@ -221,7 +275,10 @@ index.html:
             tags: {
                 assigned: ['Alex', 'Valentin', 'Sergiy', '?assigned'],
                 estimate: ['5h', '30min', '2h', '1h', '6h', '?estimate'],
-                due: ['tomorrow', 'EOD', 'one week', 'one month', '?due']
+                completeddate: ['today', 'yesterday', 'last week', 'last month', '?completed-date'],
+                starteddate: ['today', 'yesterday', 'last week', 'last month', '?started-date'],
+                due: ['tomorrow', 'EOD', 'one week', 'one month', '?due'],
+                data: ['?data1', '?data2', '?data3', '?data4', '?data5']
             },
             actions: {
                 cmd: ['?cmd'],
@@ -259,18 +316,114 @@ index.html:
 <body class="bg-gray-100">
     <div class="title text-3xl font-bold text-center py-4">Taskape Task Editor</div>
     <div id="tasktree" class="p-4"></div>
-    <div id="taskeditor" class="bg-white shadow-md rounded-lg p-4 m-4">
-        <div id="taskarea" class="border p-2 rounded" contenteditable data-placeholder="Add your task here">
+    <div id="taskeditor" class="bg-white shadow-md rounded-lg p-4 m-4 mb-task-select-mode">
+        <div id="taskarea" class="border py-2 px-4 rounded" contenteditable data-placeholder="Add your task here">
             Add your task here
         </div>
         <div class="taskoptions mt-4">
             <button id="createTaskBtn" class="bg-blue-500 text-white py-2 px-4 rounded">Add</button>
-            <button class="hidden bg-green-500 text-white py-2 px-4 rounded" id="editTaskBtn">Edit</button> 
+            <button class="bg-green-500 py-2 px-4 rounded" id="editTaskBtn">Edit</button> 
+            <button class="bg-slate-300 py-2 px-4 rounded" id="addTags">@</button>
+            <button class="bg-slate-300 py-2 px-4 rounded" id="addActions">></button>
+            <button class="bg-slate-300 py-2 px-4 rounded" id="addOracles">#</button>
+        </div>
+        <div class="autocomplete-popup" id="autocomplete-popup">
+            <input type="text" class="autocomplete-input" id="autocomplete-input">
+            <div id="autocomplete-list"></div>
         </div>
     </div>
     <script src="index.js"></script>
 </body>
 </html>
+
+
+src/autocomplete.js:
+import EventEmitter from 'eventemitter3';
+
+export class AutocompleteManager extends EventEmitter {
+    constructor(taskArea, popup) {
+        super();
+        this.taskArea = taskArea;
+        this.popup = popup;
+        this.currentCategory = '';
+        this.currentKey = '';
+        this.initEventListeners();
+    }
+
+    initEventListeners() {
+        this.taskArea.addEventListener('input', this.handleTaskAreaInput.bind(this));
+        document.querySelector('#addTags').addEventListener('click', () => this.openPopup('tags'));
+        document.querySelector('#addActions').addEventListener('click', () => this.openPopup('actions'));
+        document.querySelector('#addOracles').addEventListener('click', () => this.openPopup('oracles'));
+        document.querySelector('#addTags').addEventListener('click', () => this.addKeyToTaskArea('@'))
+        document.querySelector('#addActions').addEventListener('click', () => this.addKeyToTaskArea('>'));
+        document.querySelector('#addOracles').addEventListener('click', () => this.addKeyToTaskArea('#'));
+
+        this.popup.on('select', this.handlePopupSelect.bind(this));
+        this.popup.on('close', this.handlePopupClose.bind(this));
+    }
+
+    handleTaskAreaInput(event) {
+        const text = event.target.innerText;
+        const lastChar = text[text.length - 1];
+
+        if (['@', '>', '#'].includes(lastChar)) {
+            this.openPopup(lastChar === '@' ? 'tags' : lastChar === '>' ? 'actions' : 'oracles');
+        }
+    }
+
+    addKeyToTaskArea(key) {
+
+        // if content of the taskArea is equal with data-placeholder than remove it
+        if (this.taskArea.innerText === this.taskArea.getAttribute('data-placeholder')) {
+            this.taskArea.innerText = '';
+        }
+
+        this.taskArea.innerHTML += key;
+    }
+
+    openPopup(category, key = '') {
+        console.log('Opening popup for category:', category);
+        this.currentCategory = category;
+        this.popup.buildPopup(category);
+    }
+
+    handlePopupSelect({ key, value }) {
+        console.log('Selected:', key, value);
+        this.insertSelectedValue(key, value);
+    }
+
+    insertSelectedValue(category, value) {
+        const textToInsert = `${category}(${value})&nbsp;`;
+    
+        // console log the text to insert showing also hidden characters
+        console.log('Text to insert:', JSON.stringify(textToInsert));
+        this.taskArea.innerHTML += textToInsert;
+        this.placeCursorAtEnd();
+        this.resetState();
+    }
+    
+
+    placeCursorAtEnd() {
+        const range = document.createRange();
+        const selection = window.getSelection();
+        range.selectNodeContents(this.taskArea);
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        this.taskArea.focus();
+    }
+
+    handlePopupClose() {
+        this.placeCursorAtEnd();
+    }
+
+    resetState() {
+        this.popup.hide();
+        this.currentCategory = '';
+        this.currentKey = '';
+    }
+}
 
 
 src/clicked.js:
@@ -439,6 +592,8 @@ export const defaults = {
 
 
 src/editor.js:
+// src/editor.js
+
 'use strict';
 
 import * as utils from './utils';
@@ -514,7 +669,7 @@ export class TaskEditor {
 
     updateTask() {
         if (this.currentTask) {
-            this.currentTask.data.name = this.taskArea.innerText.trim();
+            this.currentTask.data.name = this.taskArea.innerText.replace(/\s+$/, ''); // Trim trailing spaces
             this.tree.update();
             this.resetTaskArea();
         }
@@ -522,30 +677,28 @@ export class TaskEditor {
 
     onTaskAreaInput() {
         const taskName = this.taskArea.innerText.trim();
-        if (this.currentTask && taskName && taskName !== this.placeholderText) {
-            this.editTaskBtn.classList.remove('hidden');
-            this.createTaskBtn.classList.add('hidden');
-        } else {
-            this.editTaskBtn.classList.add('hidden');
-            this.createTaskBtn.classList.remove('hidden');
-        }
     }
 
     resetTaskArea() {
         this.taskArea.innerText = '';
         this.taskArea.blur(); // Triggers the placeholder to be set
-        this.editTaskBtn.classList.add('hidden');
-        this.createTaskBtn.classList.remove('hidden');
         this.currentTask = null;
     }
 
     editTask(leaf) {
         this.currentTask = leaf;
-        this.taskArea.innerText = leaf.data.name;
-        this.editTaskBtn.classList.remove('hidden');
-        this.createTaskBtn.classList.add('hidden');
+        this.taskArea.innerHTML = leaf.data.name + '&nbsp;'; // Add a non-breaking space at the end
         this.taskArea.focus();
+    
+        // Move the cursor to the end of the text
+        const range = document.createRange();
+        const selection = window.getSelection();
+        range.selectNodeContents(this.taskArea);
+        range.collapse(false); // Collapse the range to the end of the text
+        selection.removeAllRanges();
+        selection.addRange(range);
     }
+    
 }
 
 
@@ -576,14 +729,19 @@ export class Indicator {
 
 src/init.js:
 import { Tree } from './tree';
-import { TaskEditor } from './editor';
+import { AutocompleteManager } from './autocomplete';
+import { Popup } from './popup';
 
 function initializeTree() {
     const tasks = window.tasks;
     const tree = new Tree(tasks, { parent: document.getElementById('tasktree') });
     tree.expandAll();
-    window.taskEditor = new TaskEditor(tree); // Ensure taskEditor is assigned to the tree instance
-    tree.taskEditor = window.taskEditor;
+    const taskEditorElement = document.getElementById('taskeditor');
+    const popup = new Popup(taskEditorElement);
+    const taskArea = document.getElementById('taskarea');
+    const autocompleteManager = new AutocompleteManager(taskArea, popup);
+
+    taskArea.addEventListener('input', autocompleteManager.handleTaskAreaInput.bind(autocompleteManager));
 }
 
 window.onload = function () {
@@ -689,8 +847,13 @@ export class Input {
         this._target.style.top = pos.y + 'px';
         this._target.style.opacity = this._tree.dragOpacity;
         if (this._tree._getChildren(parent, true).length === 0) {
-            parent.hideIcon();
-        }
+            const leafInstance = parent.__leafInstance; // Get the Leaf instance
+            if (leafInstance) {
+              leafInstance.hideIcon(); // Call hideIcon on the Leaf instance
+            } else {
+              console.error('Leaf instance not found for parent element'); 
+            }
+          }
     }
 
     _findClosest(e, entry) {
@@ -848,6 +1011,7 @@ export class Leaf {
         this.tree = tree;
         this.level = level;
         this.element = utils.html({ className: `${tree.prefixClassName}-leaf` });
+
         this.element.isLeaf = true;
         this.element.__leafInstance = this;
         this.element.data = data;
@@ -868,18 +1032,17 @@ export class Leaf {
         // Handle selection on the leaf
         this.element.name.addEventListener('mousedown', e => {
             tree._input._down(e);
-            this.selectLeaf();
+            this.selectModeLeaf();
+      
+            console.log('mousedown');
         });
-        this.element.name.addEventListener('touchstart', e => {
-            tree._input._down(e);
-            this.selectLeaf();
-        });
-
+    
         // Use clicked to handle single-click for selection and double-click for updating task area
         clicked(this.element.name, () => {}, {
             doubleClickCallback: () => {
                 if (tree.taskEditor && typeof tree.taskEditor.editTask === 'function') {
                     tree.taskEditor.editTask(this);
+                    this.editModeLeaf();
                 } else {
                     console.error('editTask method not found in taskEditor');
                 }
@@ -925,12 +1088,151 @@ export class Leaf {
         }
     }
 
-    selectLeaf() {
+    selectModeLeaf() {
         const selectedLeaf = document.querySelector(`.${this.tree.prefixClassName}-leaf-select`);
         if (selectedLeaf) {
             selectedLeaf.classList.remove(`${this.tree.prefixClassName}-leaf-select`);
         }
+        const taskEditorArea = document.querySelector('#taskeditor');
+
+        if (taskEditorArea.classList.contains(`${this.tree.prefixClassName}-edit-mode`)) {
+            taskEditorArea.classList.remove(`${this.tree.prefixClassName}-edit-mode`);
+            taskEditorArea.classList.add(`${this.tree.prefixClassName}-select-mode`);
+            this.tree.taskEditor.resetTaskArea();
+        }
+
         this.element.classList.add(`${this.tree.prefixClassName}-leaf-select`);
+
+      
+    }
+
+    editModeLeaf() {
+        const editedLeaf = document.querySelector(`.${this.tree.prefixClassName}-leaf-edit`);
+        if (editedLeaf) {
+            editedLeaf.classList.remove(`${this.tree.prefixClassName}-leaf-edit`);
+        }
+        const taskEditorArea = document.querySelector('#taskeditor');
+
+        if (taskEditorArea.classList.contains(`${this.tree.prefixClassName}-select-mode`)) {
+            taskEditorArea.classList.remove(`${this.tree.prefixClassName}-select-mode`);
+            taskEditorArea.classList.add(`${this.tree.prefixClassName}-edit-mode`);
+        }
+    
+        this.element.classList.add(`${this.tree.prefixClassName}-leaf-edit`);
+    }
+}
+
+
+src/popup.js:
+import EventEmitter from 'eventemitter3';
+
+export class Popup extends EventEmitter {
+    constructor(taskEditorElement) {
+        super();
+        this.element = document.getElementById('autocomplete-popup');
+        this.inputField = document.getElementById('autocomplete-input');
+        this.listElement = document.getElementById('autocomplete-list');
+
+        this.inputField.addEventListener('input', this.handleInput.bind(this));
+        this.inputField.addEventListener('keydown', this.handleKeyDown.bind(this));
+        this.element.addEventListener('click', this.handleClick.bind(this));
+
+        this.hide();
+    }
+
+    buildPopup(category) {
+        this.currentSuggestions = Object.keys(window.suggestions[category]);
+        this.currentCategory = category;
+        this.currentKey = ''; // Reset currentKey
+        this.renderList(this.currentSuggestions);
+        setTimeout(() => this.inputField.focus(), 0);
+    }
+
+    renderList(elementsArray, activeElementIndex = 0) {
+        this.activeElementIndex = activeElementIndex;
+        this.clearList();
+        elementsArray.forEach((element, index) => {
+            const item = document.createElement('div');
+            item.textContent = element;
+            item.classList.add('element-item');
+            if (index === this.activeElementIndex) {
+                item.classList.add('active');
+            }
+            this.listElement.appendChild(item);
+        });
+        this.element.style.display = 'block';
+    }
+
+    handleInput(event) {
+        const text = event.target.value.toLowerCase();
+        const filteredSuggestions = this.currentSuggestions.filter(suggestion =>
+            suggestion.toLowerCase().includes(text)
+        );
+
+        if (filteredSuggestions.length > 0) {
+            this.renderList(filteredSuggestions);
+        } else {
+            this.showNoResults();
+        }
+        this.emit('input', text);
+    }
+
+    handleKeyDown(event) {
+        const { key } = event;
+        const elements = Array.from(this.listElement.querySelectorAll('.element-item'));
+        if (key === 'ArrowDown') {
+            this.activeElementIndex = (this.activeElementIndex + 1) % elements.length;
+            this.renderList(this.currentSuggestions, this.activeElementIndex);
+        } else if (key === 'ArrowUp') {
+            this.activeElementIndex = (this.activeElementIndex - 1 + elements.length) % elements.length;
+            this.renderList(this.currentSuggestions, this.activeElementIndex);
+        } else if (key === 'Enter') {
+            this.handleSelection(elements[this.activeElementIndex].textContent);
+            event.preventDefault();
+        } else if (key === 'Tab') {
+            event.preventDefault();
+            this.activeElementIndex = (this.activeElementIndex + 1) % elements.length;
+            this.renderList(this.currentSuggestions, this.activeElementIndex);
+        } else if (key === 'Backspace' && this.inputField.value === '') {
+            this.hide();
+            this.emit('close');
+        }
+    }
+
+    handleSelection(selectedElement) {
+        this.inputField.value = '';
+        const values = window.suggestions[this.currentCategory][selectedElement];
+
+        if (values) {
+            this.currentKey = selectedElement; // Set currentKey when key is selected
+            this.currentSuggestions = values;
+            this.renderList(values);
+        } else {
+            this.emit('select', { key: this.currentKey, value: selectedElement });
+        }
+    }
+
+    handleClick(event) {
+        const clickedIndex = Array.from(this.listElement.children).indexOf(event.target);
+        if (clickedIndex >= 0) {
+            this.handleSelection(this.currentSuggestions[clickedIndex]);
+        }
+    }
+
+    clearList() {
+        this.listElement.innerHTML = '';
+    }
+
+    showNoResults() {
+        this.clearList();
+        const item = document.createElement('div');
+        item.textContent = 'Value not found';
+        item.classList.add('no-results');
+        this.listElement.appendChild(item);
+    }
+
+    hide() {
+        this.element.style.display = 'none';
     }
 }
 
@@ -1101,31 +1403,31 @@ export class Tree extends Events {
         this.element.scrollTop = scroll + 'px';
     }
 
-    editData(data) {
-        const children = this._getChildren(null, true);
-        for (let child of children) {
-            if (child.data === data) {
-                child.querySelector(`.${this.prefixClassName}-name`).setAttribute('contenteditable', true);
-                child.querySelector(`.${this.prefixClassName}-name`).focus();
-            }
-        }
-    }
+    // editData(data) {
+    //     const children = this._getChildren(null, true);
+    //     for (let child of children) {
+    //         if (child.data === data) {
+    //             child.querySelector(`.${this.prefixClassName}-name`).setAttribute('contenteditable', true);
+    //             child.querySelector(`.${this.prefixClassName}-name`).focus();
+    //         }
+    //     }
+    // }
 
-    getLeaf(leaf, root = this.element) {
-        this.findInTree(root, data => data === leaf);
-    }
+    // getLeaf(leaf, root = this.element) {
+    //     this.findInTree(root, data => data === leaf);
+    // }
 
-    findInTree(leaf, callback) {
-        for (const child of leaf.children) {
-            if (callback(child)) {
-                return child;
-            }
-            const find = this.findInTree(child, callback);
-            if (find) {
-                return find;
-            }
-        }
-    }
+    // findInTree(leaf, callback) {
+    //     for (const child of leaf.children) {
+    //         if (callback(child)) {
+    //             return child;
+    //         }
+    //         const find = this.findInTree(child, callback);
+    //         if (find) {
+    //             return find;
+    //         }
+    //     }
+    // }
 
     _getFirstChild(element, all) {
         const children = this._getChildren(element, all);

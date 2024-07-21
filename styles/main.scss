@@ -127,3 +127,30 @@ $leaf-handler-dot-color: white;
         }
     }
 }
+
+
+/* src/main.css */
+.autocomplete-popup {
+    position: absolute;
+    background: white;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.autocomplete-input {
+    width: 200px;
+    border: 1px solid #ccc;
+    padding: 5px;
+    font-size: 16px;
+}
+
+.element-item {
+    padding: 8px;
+    cursor: pointer;
+}
+
+.element-item.active {
+    // tailwindcss color 
+    background-color: #d6e1e7;
+}

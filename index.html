@@ -10,7 +10,10 @@
             tags: {
                 assigned: ['Alex', 'Valentin', 'Sergiy', '?assigned'],
                 estimate: ['5h', '30min', '2h', '1h', '6h', '?estimate'],
-                due: ['tomorrow', 'EOD', 'one week', 'one month', '?due']
+                completeddate: ['today', 'yesterday', 'last week', 'last month', '?completed-date'],
+                starteddate: ['today', 'yesterday', 'last week', 'last month', '?started-date'],
+                due: ['tomorrow', 'EOD', 'one week', 'one month', '?due'],
+                data: ['?data1', '?data2', '?data3', '?data4', '?data5']
             },
             actions: {
                 cmd: ['?cmd'],
@@ -58,6 +61,10 @@
             <button class="bg-slate-300 py-2 px-4 rounded" id="addTags">@</button>
             <button class="bg-slate-300 py-2 px-4 rounded" id="addActions">></button>
             <button class="bg-slate-300 py-2 px-4 rounded" id="addOracles">#</button>
+        </div>
+        <div class="autocomplete-popup" id="autocomplete-popup">
+            <input type="text" class="autocomplete-input" id="autocomplete-input">
+            <div id="autocomplete-list"></div>
         </div>
     </div>
     <script src="index.js"></script>

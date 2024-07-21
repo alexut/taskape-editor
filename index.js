@@ -56,11 +56,11 @@
         if (--emitter._eventsCount === 0) emitter._events = new Events2();
         else delete emitter._events[evt];
       }
-      function EventEmitter() {
+      function EventEmitter3() {
         this._events = new Events2();
         this._eventsCount = 0;
       }
-      EventEmitter.prototype.eventNames = function eventNames() {
+      EventEmitter3.prototype.eventNames = function eventNames() {
         var names = [], events, name;
         if (this._eventsCount === 0) return names;
         for (name in events = this._events) {
@@ -71,7 +71,7 @@
         }
         return names;
       };
-      EventEmitter.prototype.listeners = function listeners(event) {
+      EventEmitter3.prototype.listeners = function listeners(event) {
         var evt = prefix ? prefix + event : event, handlers = this._events[evt];
         if (!handlers) return [];
         if (handlers.fn) return [handlers.fn];
@@ -80,13 +80,13 @@
         }
         return ee;
       };
-      EventEmitter.prototype.listenerCount = function listenerCount(event) {
+      EventEmitter3.prototype.listenerCount = function listenerCount(event) {
         var evt = prefix ? prefix + event : event, listeners = this._events[evt];
         if (!listeners) return 0;
         if (listeners.fn) return 1;
         return listeners.length;
       };
-      EventEmitter.prototype.emit = function emit(event, a1, a2, a3, a4, a5) {
+      EventEmitter3.prototype.emit = function emit(event, a1, a2, a3, a4, a5) {
         var evt = prefix ? prefix + event : event;
         if (!this._events[evt]) return false;
         var listeners = this._events[evt], len = arguments.length, args, i;
@@ -137,13 +137,13 @@
         }
         return true;
       };
-      EventEmitter.prototype.on = function on(event, fn, context) {
+      EventEmitter3.prototype.on = function on(event, fn, context) {
         return addListener(this, event, fn, context, false);
       };
-      EventEmitter.prototype.once = function once(event, fn, context) {
+      EventEmitter3.prototype.once = function once(event, fn, context) {
         return addListener(this, event, fn, context, true);
       };
-      EventEmitter.prototype.removeListener = function removeListener(event, fn, context, once) {
+      EventEmitter3.prototype.removeListener = function removeListener(event, fn, context, once) {
         var evt = prefix ? prefix + event : event;
         if (!this._events[evt]) return this;
         if (!fn) {
@@ -166,7 +166,7 @@
         }
         return this;
       };
-      EventEmitter.prototype.removeAllListeners = function removeAllListeners(event) {
+      EventEmitter3.prototype.removeAllListeners = function removeAllListeners(event) {
         var evt;
         if (event) {
           evt = prefix ? prefix + event : event;
@@ -177,12 +177,12 @@
         }
         return this;
       };
-      EventEmitter.prototype.off = EventEmitter.prototype.removeListener;
-      EventEmitter.prototype.addListener = EventEmitter.prototype.on;
-      EventEmitter.prefixed = prefix;
-      EventEmitter.EventEmitter = EventEmitter;
+      EventEmitter3.prototype.off = EventEmitter3.prototype.removeListener;
+      EventEmitter3.prototype.addListener = EventEmitter3.prototype.on;
+      EventEmitter3.prefixed = prefix;
+      EventEmitter3.EventEmitter = EventEmitter3;
       if ("undefined" !== typeof module) {
-        module.exports = EventEmitter;
+        module.exports = EventEmitter3;
       }
     }
   });
@@ -1056,13 +1056,185 @@
     }
   };
 
+  // src/autocomplete.js
+  var import_eventemitter32 = __toESM(require_eventemitter3());
+  var AutocompleteManager = class extends import_eventemitter32.default {
+    constructor(taskArea, popup) {
+      super();
+      this.taskArea = taskArea;
+      this.popup = popup;
+      this.currentCategory = "";
+      this.currentKey = "";
+      this.initEventListeners();
+    }
+    initEventListeners() {
+      this.taskArea.addEventListener("input", this.handleTaskAreaInput.bind(this));
+      document.querySelector("#addTags").addEventListener("click", () => this.openPopup("tags"));
+      document.querySelector("#addActions").addEventListener("click", () => this.openPopup("actions"));
+      document.querySelector("#addOracles").addEventListener("click", () => this.openPopup("oracles"));
+      document.querySelector("#addTags").addEventListener("click", () => this.addKeyToTaskArea("@"));
+      document.querySelector("#addActions").addEventListener("click", () => this.addKeyToTaskArea(">"));
+      document.querySelector("#addOracles").addEventListener("click", () => this.addKeyToTaskArea("#"));
+      this.popup.on("select", this.handlePopupSelect.bind(this));
+      this.popup.on("close", this.handlePopupClose.bind(this));
+    }
+    handleTaskAreaInput(event) {
+      const text = event.target.innerText;
+      const lastChar = text[text.length - 1];
+      if (["@", ">", "#"].includes(lastChar)) {
+        this.openPopup(lastChar === "@" ? "tags" : lastChar === ">" ? "actions" : "oracles");
+      }
+    }
+    addKeyToTaskArea(key) {
+      if (this.taskArea.innerText === this.taskArea.getAttribute("data-placeholder")) {
+        this.taskArea.innerText = "";
+      }
+      this.taskArea.innerHTML += key;
+    }
+    openPopup(category, key = "") {
+      console.log("Opening popup for category:", category);
+      this.currentCategory = category;
+      this.popup.buildPopup(category);
+    }
+    handlePopupSelect({ key, value }) {
+      console.log("Selected:", key, value);
+      this.insertSelectedValue(key, value);
+    }
+    insertSelectedValue(category, value) {
+      const textToInsert = `${category}(${value})&nbsp;`;
+      console.log("Text to insert:", JSON.stringify(textToInsert));
+      this.taskArea.innerHTML += textToInsert;
+      this.placeCursorAtEnd();
+      this.resetState();
+    }
+    placeCursorAtEnd() {
+      const range = document.createRange();
+      const selection = window.getSelection();
+      range.selectNodeContents(this.taskArea);
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      this.taskArea.focus();
+    }
+    handlePopupClose() {
+      this.placeCursorAtEnd();
+    }
+    resetState() {
+      this.popup.hide();
+      this.currentCategory = "";
+      this.currentKey = "";
+    }
+  };
+
+  // src/popup.js
+  var import_eventemitter33 = __toESM(require_eventemitter3());
+  var Popup = class extends import_eventemitter33.default {
+    constructor(taskEditorElement) {
+      super();
+      this.element = document.getElementById("autocomplete-popup");
+      this.inputField = document.getElementById("autocomplete-input");
+      this.listElement = document.getElementById("autocomplete-list");
+      this.inputField.addEventListener("input", this.handleInput.bind(this));
+      this.inputField.addEventListener("keydown", this.handleKeyDown.bind(this));
+      this.element.addEventListener("click", this.handleClick.bind(this));
+      this.hide();
+    }
+    buildPopup(category) {
+      this.currentSuggestions = Object.keys(window.suggestions[category]);
+      this.currentCategory = category;
+      this.currentKey = "";
+      this.renderList(this.currentSuggestions);
+      setTimeout(() => this.inputField.focus(), 0);
+    }
+    renderList(elementsArray, activeElementIndex = 0) {
+      this.activeElementIndex = activeElementIndex;
+      this.clearList();
+      elementsArray.forEach((element, index) => {
+        const item = document.createElement("div");
+        item.textContent = element;
+        item.classList.add("element-item");
+        if (index === this.activeElementIndex) {
+          item.classList.add("active");
+        }
+        this.listElement.appendChild(item);
+      });
+      this.element.style.display = "block";
+    }
+    handleInput(event) {
+      const text = event.target.value.toLowerCase();
+      const filteredSuggestions = this.currentSuggestions.filter(
+        (suggestion) => suggestion.toLowerCase().includes(text)
+      );
+      if (filteredSuggestions.length > 0) {
+        this.renderList(filteredSuggestions);
+      } else {
+        this.showNoResults();
+      }
+      this.emit("input", text);
+    }
+    handleKeyDown(event) {
+      const { key } = event;
+      const elements = Array.from(this.listElement.querySelectorAll(".element-item"));
+      if (key === "ArrowDown") {
+        this.activeElementIndex = (this.activeElementIndex + 1) % elements.length;
+        this.renderList(this.currentSuggestions, this.activeElementIndex);
+      } else if (key === "ArrowUp") {
+        this.activeElementIndex = (this.activeElementIndex - 1 + elements.length) % elements.length;
+        this.renderList(this.currentSuggestions, this.activeElementIndex);
+      } else if (key === "Enter") {
+        this.handleSelection(elements[this.activeElementIndex].textContent);
+        event.preventDefault();
+      } else if (key === "Tab") {
+        event.preventDefault();
+        this.activeElementIndex = (this.activeElementIndex + 1) % elements.length;
+        this.renderList(this.currentSuggestions, this.activeElementIndex);
+      } else if (key === "Backspace" && this.inputField.value === "") {
+        this.hide();
+        this.emit("close");
+      }
+    }
+    handleSelection(selectedElement) {
+      this.inputField.value = "";
+      const values = window.suggestions[this.currentCategory][selectedElement];
+      if (values) {
+        this.currentKey = selectedElement;
+        this.currentSuggestions = values;
+        this.renderList(values);
+      } else {
+        this.emit("select", { key: this.currentKey, value: selectedElement });
+      }
+    }
+    handleClick(event) {
+      const clickedIndex = Array.from(this.listElement.children).indexOf(event.target);
+      if (clickedIndex >= 0) {
+        this.handleSelection(this.currentSuggestions[clickedIndex]);
+      }
+    }
+    clearList() {
+      this.listElement.innerHTML = "";
+    }
+    showNoResults() {
+      this.clearList();
+      const item = document.createElement("div");
+      item.textContent = "Value not found";
+      item.classList.add("no-results");
+      this.listElement.appendChild(item);
+    }
+    hide() {
+      this.element.style.display = "none";
+    }
+  };
+
   // src/init.js
   function initializeTree() {
     const tasks = window.tasks;
     const tree = new Tree(tasks, { parent: document.getElementById("tasktree") });
     tree.expandAll();
-    window.taskEditor = new TaskEditor(tree);
-    tree.taskEditor = window.taskEditor;
+    const taskEditorElement = document.getElementById("taskeditor");
+    const popup = new Popup(taskEditorElement);
+    const taskArea = document.getElementById("taskarea");
+    const autocompleteManager = new AutocompleteManager(taskArea, popup);
+    taskArea.addEventListener("input", autocompleteManager.handleTaskAreaInput.bind(autocompleteManager));
   }
   window.onload = function() {
     initializeTree();

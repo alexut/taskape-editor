@@ -592,6 +592,9 @@ video {
   --tw-blur: blur(8px);
   filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
 }
+.filter {
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
 .font {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 1.25em;
@@ -698,4 +701,29 @@ video {
 }
 #taskeditor.mb-task-edit-mode #createTaskBtn {
   display: none;
+}
+
+/* src/main.css */
+.autocomplete-popup {
+  position: absolute;
+  background: white;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.autocomplete-input {
+  width: 200px;
+  border: 1px solid #ccc;
+  padding: 5px;
+  font-size: 16px;
+}
+
+.element-item {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.element-item.active {
+  background-color: #d6e1e7;
 }
